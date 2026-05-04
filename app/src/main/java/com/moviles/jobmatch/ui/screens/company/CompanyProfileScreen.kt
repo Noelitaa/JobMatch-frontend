@@ -54,18 +54,7 @@ fun CompanyProfileScreen(
             ProfileHeader(
                 initials = company.companyName.take(2).uppercase(),
                 name = company.companyName,
-                memberSince = "Miembro desde ${company.createdAt.take(10)}"
             )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatCard(value = company.activeJobsCount, label = "Trabajos Activos")
-                StatCard(value = if (company.isActive) 1 else 0, label = "Estado")
-            }
 
             Card(
                 modifier = Modifier
@@ -93,13 +82,6 @@ fun CompanyProfileScreen(
                         CompanyInfoRow(
                             icon = Icons.Default.Phone,
                             label = "Teléfono",
-                            value = it
-                        )
-                    }
-                    company.companyId?.let {
-                        CompanyInfoRow(
-                            icon = Icons.Default.Business,
-                            label = "Cédula Jurídica",
                             value = it
                         )
                     }

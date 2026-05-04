@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 fun ProfileHeader(
     initials: String,
     name: String,
-    memberSince: String,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -59,12 +58,6 @@ fun ProfileHeader(
                 fontSize = 22.sp
             )
 
-            Text(
-                text = memberSince,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black.copy(alpha = 0.7f),
-                fontSize = 14.sp
-            )
         }
     }
 }
