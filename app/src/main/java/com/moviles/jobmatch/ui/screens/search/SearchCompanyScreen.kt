@@ -1,6 +1,5 @@
 package com.moviles.jobmatch.ui.screens.search
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moviles.jobmatch.ui.components.CompanyCard
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +58,9 @@ fun SearchCompanyScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
-                    onClick = {
-                        val id = viewModel.searchExactCompany()
-                        id?.let { onCompanySelected(it) }
-                    },
+                    onClick = { viewModel.searchExactCompany { companyId ->
+                        onCompanySelected(companyId)
+                    } },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = uiState.searchText.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(
@@ -70,7 +69,7 @@ fun SearchCompanyScreen(
                 ) {
                     Text(
                         text = "Buscar por nombre exacto",
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -83,7 +82,6 @@ fun SearchCompanyScreen(
                     )
                 }
             }
-
 
             Text(
                 text = "O selecciona una empresa de la lista:",
@@ -99,29 +97,23 @@ fun SearchCompanyScreen(
                 contentPadding = PaddingValues(bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(uiState.filteredCompanies) { (name, id) ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .clickable { onCompanySelected(id) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                items(uiState.filteredCompanies) { company ->
+                    CompanyCard(
+                        company = company,
+                        onClick = { viewModel.selectCompany(company.id, onCompanySelected) }
+                    )
+                }
+
+                if (uiState.filteredCompanies.isEmpty() && uiState.searchText.isNotBlank()) {
+                    item {
                         Text(
-                            text = name,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = "No hay empresas que coincidan con '${uiState.searchText}'",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
-
-
             }
         }
     }
