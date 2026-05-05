@@ -20,6 +20,7 @@ fun JobMatchTopBar(
     title: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    showBackButton: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
