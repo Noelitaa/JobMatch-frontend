@@ -9,6 +9,7 @@ object AppConstants {
         object Paths {
             const val COMPANY_PROFILE = "companies/{companyId}"
             const val AUTH_LOGIN = "auth/login"
+            const val AUTH_REGISTER_STUDENT = "auth/register"
         }
     }
 }
