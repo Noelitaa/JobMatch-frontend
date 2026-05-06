@@ -1,8 +1,13 @@
 package com.moviles.jobmatch.data.repository
 
+import com.moviles.jobmatch.data.remote.RetrofitClient
 
 object AppContainer {
     val companyRepository: CompanyRepository by lazy {
         CompanyRepository()
+    }
+
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(RetrofitClient.apiService)
     }
 }

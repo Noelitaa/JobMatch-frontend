@@ -8,7 +8,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
+import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
+import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -16,9 +18,25 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     NavHost(
         navController = navController,
-        startDestination = AppDestinations.SEARCH_COMPANY,
+        startDestination = AppDestinations.SPLASH,
         modifier = modifier
     ) {
+        composable(route = AppDestinations.SPLASH) {
+            SplashScreen(navController = navController)
+        }
+
+        composable(route = AppDestinations.LOGIN) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(AppDestinations.SEARCH_COMPANY) {
+                        popUpTo(AppDestinations.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = { /* TODO: ruta registro */ },
+                onNavigateToForgotPassword = { /* TODO: ruta recuperar contraseña */ }
+            )
+        }
+
         composable(route = AppDestinations.SEARCH_COMPANY) {
             SearchCompanyScreen(
                 onCompanySelected = { companyId ->

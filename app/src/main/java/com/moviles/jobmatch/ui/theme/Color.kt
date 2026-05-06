@@ -23,6 +23,10 @@ val BottomNavSelected = DarkBlue
 val StatusActive = Color(0xFF4CAF50)
 val StatusInactive = Color(0xFFF44336)
 
+// Splash Gradient
+val SplashGradientTop = Color(0xFF5B7BFF)
+val SplashGradientBottom = Color(0xFF3D5AF1)
+
 object JobMatchColors {
     val bottomNavUnselected: Color
         @Composable
