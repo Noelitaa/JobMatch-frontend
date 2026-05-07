@@ -66,6 +66,49 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
         }
     }
 
+    fun registerCompany(
+        companyName: String,
+        taxId: String,
+        email: String,
+        phone: String,
+        description: String,
+        password: String,
+        confirmPassword: String
+    ) {
+        if (companyName.isBlank() || taxId.isBlank() || email.isBlank() ||
+            phone.isBlank() || description.isBlank() || password.isBlank() || confirmPassword.isBlank()
+        ) {
+            _uiState.update { it.copy(errorMessage = "Por favor completa todos los campos") }
+            return
+        }
+
+        if (password != confirmPassword) {
+            _uiState.update { it.copy(errorMessage = "Las contraseñas no coinciden") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            when (val result = authRepository.registerCompany(
+                companyName, taxId, email, phone, description, password
+            )) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isRegistered = true,
+                            successMessage = "¡Cuenta creada exitosamente! Inicia sesión."
+                        )
+                    }
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                }
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }

@@ -3,13 +3,14 @@ package com.moviles.jobmatch.core
 
 object AppConstants {
 
-    const val BASE_URL = "http://0.0.0.0:5293/"
+    const val BASE_URL = "http://10.0.2.2:5293/"
 
     object Api {
         object Paths {
             const val COMPANY_PROFILE = "companies/{companyId}"
             const val AUTH_LOGIN = "auth/login"
             const val AUTH_REGISTER_STUDENT = "auth/register"
+            const val AUTH_REGISTER_COMPANY = "auth/register/company"
         }
     }
 }

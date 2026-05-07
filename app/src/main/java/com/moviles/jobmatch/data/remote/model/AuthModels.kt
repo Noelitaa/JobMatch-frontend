@@ -24,6 +24,16 @@ data class RegisterStudentRequest(
     val studentId: String? = null
 )
 
+data class RegisterCompanyRequest(
+    val companyName: String,
+    val companyId: String,
+    val email: String,
+    val phone: String,
+    val description: String,
+    @com.google.gson.annotations.SerializedName("passwordHash")
+    val password: String
+)
+
 data class RegisterResponse(
     val userId: String,
     val message: String

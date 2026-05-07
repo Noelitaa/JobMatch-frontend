@@ -20,9 +20,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -33,6 +36,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -60,7 +64,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.AccountTypeCard
-import com.moviles.jobmatch.ui.components.JobMatchButton
 import com.moviles.jobmatch.ui.components.JobMatchTextField
 import com.moviles.jobmatch.ui.theme.Background
 import com.moviles.jobmatch.ui.theme.BottomNavUnselected
@@ -78,6 +81,8 @@ fun RegisterScreen(
     )
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
+    var selectedType by remember { mutableStateOf("student") }
+
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -87,6 +92,11 @@ fun RegisterScreen(
     var university by remember { mutableStateOf("") }
     var career by remember { mutableStateOf("") }
     var studentId by remember { mutableStateOf("") }
+
+    var companyName by remember { mutableStateOf("") }
+    var taxId by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isRegistered) {
         if (uiState.isRegistered) {
@@ -165,43 +175,134 @@ fun RegisterScreen(
                     icon = Icons.Default.School,
                     title = "Estudiante",
                     description = "Busco trabajos temporales y pasantías.",
-                    isSelected = true,
-                    onClick = {},
+                    isSelected = selectedType == "student",
+                    onClick = { selectedType = "student" },
                     modifier = Modifier.weight(1f)
                 )
-                Column(modifier = Modifier.weight(1f)) {
-                    AccountTypeCard(
-                        icon = Icons.Default.Work,
-                        title = "Empresa",
-                        description = "Busco talento joven para mi negocio.",
-                        isSelected = false,
-                        onClick = {},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .alpha(0.4f)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Próximamente",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                AccountTypeCard(
+                    icon = Icons.Default.Work,
+                    title = "Empresa",
+                    description = "Busco talento joven para mi negocio.",
+                    isSelected = selectedType == "company",
+                    onClick = { selectedType = "company" },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            JobMatchTextField(
-                value = fullName,
-                onValueChange = { fullName = it },
-                label = "Nombre Completo",
-                placeholder = "Ej. Juan Pérez",
-                leadingIcon = Icons.Default.Person
-            )
+            if (selectedType == "student") {
+                JobMatchTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = "Nombre Completo",
+                    placeholder = "Ej. Juan Pérez",
+                    leadingIcon = Icons.Default.Person
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                JobMatchTextField(
+                    value = university,
+                    onValueChange = { university = it },
+                    label = "Universidad",
+                    placeholder = "Ej. Universidad de Costa Rica",
+                    leadingIcon = Icons.Default.School
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                JobMatchTextField(
+                    value = career,
+                    onValueChange = { career = it },
+                    label = "Carrera",
+                    placeholder = "Ej. Ingeniería en Sistemas",
+                    leadingIcon = Icons.AutoMirrored.Filled.MenuBook
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                JobMatchTextField(
+                    value = studentId,
+                    onValueChange = { studentId = it },
+                    label = "Cédula",
+                    placeholder = "Ej. 118340123",
+                    leadingIcon = Icons.Default.Badge
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                JobMatchTextField(
+                    value = companyName,
+                    onValueChange = { companyName = it },
+                    label = "Nombre de la Empresa",
+                    placeholder = "Ej. Tech Solutions S.A.",
+                    leadingIcon = Icons.Default.Business
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                JobMatchTextField(
+                    value = taxId,
+                    onValueChange = { taxId = it },
+                    label = "Cédula Jurídica",
+                    placeholder = "Ej. 3-101-123456",
+                    leadingIcon = Icons.Default.Badge
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                JobMatchTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = "Teléfono",
+                    placeholder = "Ej. 88887777",
+                    leadingIcon = Icons.Default.Phone,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Descripción",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = BottomNavUnselected
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        placeholder = {
+                            Text(
+                                text = "Describe tu empresa...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = Color.Gray
+                            )
+                        },
+                        singleLine = false,
+                        maxLines = 3,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DarkBlue,
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            cursorColor = DarkBlue
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             JobMatchTextField(
                 value = email,
@@ -210,36 +311,6 @@ fun RegisterScreen(
                 placeholder = "nombre@ejemplo.com",
                 leadingIcon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            JobMatchTextField(
-                value = university,
-                onValueChange = { university = it },
-                label = "Universidad",
-                placeholder = "Ej. Universidad de Costa Rica",
-                leadingIcon = Icons.Default.School
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            JobMatchTextField(
-                value = career,
-                onValueChange = { career = it },
-                label = "Carrera",
-                placeholder = "Ej. Ingeniería en Sistemas",
-                leadingIcon = Icons.AutoMirrored.Filled.MenuBook
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            JobMatchTextField(
-                value = studentId,
-                onValueChange = { studentId = it },
-                label = "Cédula",
-                placeholder = "Ej. 118340123",
-                leadingIcon = Icons.Default.Badge
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -286,16 +357,28 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val isFormValid = fullName.isNotBlank() && email.isNotBlank() &&
-                university.isNotBlank() && career.isNotBlank() && studentId.isNotBlank() &&
-                password.isNotBlank() && confirmPassword.isNotBlank()
+            val isFormValid = if (selectedType == "student") {
+                fullName.isNotBlank() && email.isNotBlank() &&
+                    university.isNotBlank() && career.isNotBlank() && studentId.isNotBlank() &&
+                    password.isNotBlank() && confirmPassword.isNotBlank()
+            } else {
+                companyName.isNotBlank() && taxId.isNotBlank() && email.isNotBlank() &&
+                    phone.isNotBlank() && description.isNotBlank() &&
+                    password.isNotBlank() && confirmPassword.isNotBlank()
+            }
 
             Button(
                 onClick = {
-                    registerViewModel.register(
-                        fullName, email, password, confirmPassword,
-                        university, career, studentId.ifBlank { null }
-                    )
+                    if (selectedType == "student") {
+                        registerViewModel.register(
+                            fullName, email, password, confirmPassword,
+                            university, career, studentId.ifBlank { null }
+                        )
+                    } else {
+                        registerViewModel.registerCompany(
+                            companyName, taxId, email, phone, description, password, confirmPassword
+                        )
+                    }
                 },
                 enabled = !uiState.isLoading,
                 shape = RoundedCornerShape(12.dp),

@@ -6,6 +6,7 @@ import com.moviles.jobmatch.data.CompanySummary
 import com.moviles.jobmatch.data.remote.model.LoginRequest
 import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
+import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -19,6 +20,9 @@ interface ApiService {
 
     @POST(AppConstants.Api.Paths.AUTH_REGISTER_STUDENT)
     suspend fun registerStudent(@Body request: RegisterStudentRequest): Response<RegisterResponse>
+
+    @POST(AppConstants.Api.Paths.AUTH_REGISTER_COMPANY)
+    suspend fun registerCompany(@Body request: RegisterCompanyRequest): Response<RegisterResponse>
 
     @GET("companies/{companyId}")
     suspend fun getCompanyProfile(@Path("companyId") companyId: String): Company
