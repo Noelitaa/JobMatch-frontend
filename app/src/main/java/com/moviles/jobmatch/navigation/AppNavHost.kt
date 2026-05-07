@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
+import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 
@@ -32,8 +33,20 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         popUpTo(AppDestinations.LOGIN) { inclusive = true }
                     }
                 },
-                onNavigateToRegister = { /* TODO: ruta registro */ },
+                onNavigateToRegister = {
+                    navController.navigate(AppDestinations.REGISTER)
+                },
                 onNavigateToForgotPassword = { /* TODO: ruta recuperar contraseña */ }
+            )
+        }
+
+        composable(route = AppDestinations.REGISTER) {
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.navigate(AppDestinations.LOGIN) {
+                        popUpTo(AppDestinations.SPLASH) { inclusive = false }
+                    }
+                }
             )
         }
 
