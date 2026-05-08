@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
+import com.moviles.jobmatch.ui.screens.company.CreateJobScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
@@ -36,7 +37,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 onNavigateToRegister = {
                     navController.navigate(AppDestinations.REGISTER)
                 },
-                onNavigateToForgotPassword = { /* TODO: ruta recuperar contraseña */ }
+                onNavigateToForgotPassword = { }
             )
         }
 
@@ -57,6 +58,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 },
                 onBackPressed = {
                     android.os.Process.killProcess(android.os.Process.myPid())
+                },
+                onJobCreated = {
+                    // Por ahora navegamos con un companyId hardcodeado
+                    // cuando tengas sesión, aquí usas AuthSession.currentUser?.userId
+                    navController.navigate(AppDestinations.createJobRoute("temp-company-id"))
                 }
             )
         }
@@ -70,9 +76,21 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             val companyId = backStackEntry.arguments?.getString("companyId").orEmpty()
             CompanyProfileScreen(
                 companyId = companyId,
-                onBackPressed = {
-                    navController.popBackStack()
-                }
+                onBackPressed = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = AppDestinations.CREATE_JOB,
+            arguments = listOf(
+                navArgument("companyId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val companyId = backStackEntry.arguments?.getString("companyId").orEmpty()
+            CreateJobScreen(
+                companyId = companyId,
+                onBackPressed = { navController.popBackStack() },
+                onJobCreated = { navController.popBackStack() }
             )
         }
     }
