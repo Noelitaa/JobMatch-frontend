@@ -10,7 +10,6 @@ import androidx.navigation.navArgument
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
-import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 
 @Composable
@@ -29,37 +28,29 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         composable(route = AppDestinations.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(AppDestinations.SEARCH_COMPANY) {
+                    navController.navigate(AppDestinations.MAIN_TABS) {
                         popUpTo(AppDestinations.LOGIN) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
                     navController.navigate(AppDestinations.REGISTER)
                 },
-                onNavigateToForgotPassword = { /* TODO: ruta recuperar contraseña */ }
+                onNavigateToForgotPassword = { /* TODO: implementar */ }
             )
         }
 
         composable(route = AppDestinations.REGISTER) {
             RegisterScreen(
                 onNavigateToLogin = {
-                    navController.navigate(AppDestinations.LOGIN) {
-                        popUpTo(AppDestinations.SPLASH) { inclusive = false }
-                    }
+                    navController.navigate(AppDestinations.LOGIN)
                 }
             )
         }
 
-        composable(route = AppDestinations.SEARCH_COMPANY) {
-            SearchCompanyScreen(
-                onCompanySelected = { companyId ->
-                    navController.navigate(AppDestinations.companyProfileRoute(companyId))
-                },
-                onBackPressed = {
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                }
-            )
+        composable(route = AppDestinations.MAIN_TABS) {
+            MainTab(navController = navController)
         }
+
 
         composable(
             route = AppDestinations.COMPANY_PROFILE,

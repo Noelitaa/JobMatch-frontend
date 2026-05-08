@@ -3,7 +3,7 @@ package com.moviles.jobmatch.core
 
 object AppConstants {
 
-    const val BASE_URL = "http://0.0.0.0:5293/"
+    const val BASE_URL = "http://192.168.50.119:5293/"
 
     object Api {
         object Paths {
