@@ -3,6 +3,7 @@ package com.moviles.jobmatch.data.remote
 import com.moviles.jobmatch.core.AppConstants
 import com.moviles.jobmatch.data.Company
 import com.moviles.jobmatch.data.CompanySummary
+import com.moviles.jobmatch.data.Job
 import com.moviles.jobmatch.data.remote.model.LoginRequest
 import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
@@ -29,4 +30,7 @@ interface ApiService {
 
     @GET("companies")
     suspend fun getAllCompanies(): List<CompanySummary>
+
+    @GET("jobs")
+    suspend fun getAllJobs(): Response<List<Job>>
 }
