@@ -9,7 +9,6 @@ import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
 import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
-import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import retrofit2.Response
