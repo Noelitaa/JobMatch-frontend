@@ -7,6 +7,7 @@ import com.moviles.jobmatch.data.Job
 import com.moviles.jobmatch.data.remote.model.LoginRequest
 import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
+import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
 import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobRequest
