@@ -26,7 +26,7 @@ fun JobCard(
     onSeeMoreClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // "Maquillaje" para el ID de empresa feo
+
     val displayCompanyName = if (job.idCompany.length > 15) "Empresa Verificada" else job.idCompany
 
     Card(
@@ -67,7 +67,7 @@ fun JobCard(
                     )
                 }
 
-                // Badge de "Fit" (Opcional, decorativo para el prototipo)
+
                 Surface(
                     color = Color(0xFFE3F2FD),
                     shape = RoundedCornerShape(8.dp)

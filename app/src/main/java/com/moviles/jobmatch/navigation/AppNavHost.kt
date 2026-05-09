@@ -26,7 +26,7 @@ import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
-
+import com.moviles.jobmatch.data.AuthSession
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
@@ -89,6 +89,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 SearchCompanyScreen(
                     onCompanySelected = { id ->
                         navController.navigate(AppDestinations.companyProfileRoute(id))
+                    },
+                    onJobCreated = {
+                        val companyId = AuthSession.currentUser?.userId ?: ""
+                        navController.navigate(AppDestinations.createJobRoute(companyId))
                     }
                 )
             }
@@ -122,6 +126,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.PROFILE) {
                 PlaceholderScreen("Perfil")
+            }
+
+            composable(
+                route = AppDestinations.CREATE_JOB,
+                arguments = listOf(navArgument("companyId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val companyId = backStackEntry.arguments?.getString("companyId").orEmpty()
+                com.moviles.jobmatch.ui.screens.company.CreateJobScreen(
+                    companyId = companyId,
+                    onBackPressed = { navController.popBackStack() },
+                    onJobCreated = { navController.popBackStack() }
+                )
             }
 
             composable(

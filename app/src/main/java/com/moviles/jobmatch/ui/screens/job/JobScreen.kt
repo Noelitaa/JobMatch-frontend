@@ -75,7 +75,7 @@ fun JobsScreen(
             }
         }
 
-        // TEXTO DE "MOSTRANDO X TRABAJOS" (Como en el prototipo)
+
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically

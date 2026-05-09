@@ -1,8 +1,5 @@
 package com.moviles.jobmatch.navigation
 
-/**
- * Mapeo lógico de las pestañas siguiendo el estándar de la profe.
- */
 enum class MainTab {
     Inicio,
     Explorar,

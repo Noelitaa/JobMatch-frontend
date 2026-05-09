@@ -10,6 +10,8 @@ import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
 import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
+import com.moviles.jobmatch.data.remote.model.CreateJobRequest
+import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -35,6 +37,9 @@ interface ApiService {
     @GET("jobs")
     suspend fun getAllJobs(): Response<List<Job>>
 
+    @POST("jobs")
+    suspend fun createJob(@Body request: CreateJobRequest): Response<CreateJobResponse>
+  
     @GET("jobs/{jobId}")
     suspend fun getJobById(@Path("jobId") jobId: Int): Response<JobDetailResponse>
 }
