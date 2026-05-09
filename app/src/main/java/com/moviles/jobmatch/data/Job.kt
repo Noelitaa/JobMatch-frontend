@@ -1,12 +1,14 @@
 package com.moviles.jobmatch.data
 
 data class Job(
-    val id: Int,
+    val idCompany: String,
     val title: String,
-    val company: String,
-    val fitPercentage: Int,
-    val schedule: String,
-    val distanceKm: Double,
+    val description: String,
+    val type: String,
+    val payment: Double,
     val paymentType: String,
-    val amount: Int
+    val date: String,
+    val startTime: String,
+    val endTime: String,
+    val deliverables: List<String> = emptyList()
 )

@@ -3,13 +3,16 @@ package com.moviles.jobmatch.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,27 +26,33 @@ fun JobCard(
     onSeeMoreClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // "Maquillaje" para el ID de empresa feo
+    val displayCompanyName = if (job.idCompany.length > 15) "Empresa Verificada" else job.idCompany
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        // Borde gris muy suave como el del prototipo
+        shape = RoundedCornerShape(20.dp), // Más redondeado como el prototipo
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // --- FILA SUPERIOR: Título y Badge de Fit ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Logo Circular (Placeholder como el prototipo)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF5F7FB)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Business, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(24.dp))
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = job.title,
@@ -52,21 +61,21 @@ fun JobCard(
                         color = Color(0xFF1A1A1A)
                     )
                     Text(
-                        text = job.company,
+                        text = displayCompanyName,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
                 }
 
-                // Badge de Porcentaje (% Fit)
+                // Badge de "Fit" (Opcional, decorativo para el prototipo)
                 Surface(
-                    color = DarkBlue.copy(alpha = 0.1f),
+                    color = Color(0xFFE3F2FD),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "${job.fitPercentage}% Fit",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
+                        text = "95% Fit",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
                         color = DarkBlue,
                         fontWeight = FontWeight.Bold
                     )
@@ -75,27 +84,16 @@ fun JobCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- FILA DE ICONOS: Horario y Distancia ---
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                InfoTag(text = job.schedule, icon = "🕒")
-                InfoTag(text = "${job.distanceKm} km", icon = "📍")
+            Row {
+                InfoTag(text = "${job.startTime} - ${job.endTime}", icon = "🕒")
+                Spacer(modifier = Modifier.width(8.dp))
+                InfoTag(text = "Cerca de ti", icon = "📍")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // --- LÍNEA DIVISORA ---
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = Color(0xFFF5F5F5)
-            )
-
+            HorizontalDivider(thickness = 1.dp, color = Color(0xFFF5F5F5))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- FILA INFERIOR: Pago y Botón ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,69 +101,43 @@ fun JobCard(
             ) {
                 Column {
                     Text(
-                        text = "Pago por hora",
+                        text = "Pago por ${job.paymentType}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
                     Text(
-                        text = "₡${job.amount}", // Símbolo de colón costarricense
+                        text = "₡${job.payment}",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.Black
                     )
                 }
 
-                // Botón "Ver más" con estilo de texto azul y flecha
-                TextButton(
-                    onClick = onSeeMoreClick,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Text(
-                            text = "Ver más",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = DarkBlue
-                        )
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = DarkBlue,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                TextButton(onClick = onSeeMoreClick) {
+                    Text("Ver más", fontWeight = FontWeight.Bold, color = DarkBlue)
+                    Icon(Icons.Default.KeyboardArrowRight, null, tint = DarkBlue)
                 }
             }
         }
     }
 }
 
-/**
- * Componente interno para los tags de información (Horario, Ubicación)
- */
 @Composable
 fun InfoTag(text: String, icon: String) {
     Surface(
-        color = Color(0xFFF5F7FB), // Fondo gris-azulado muy claro
+        color = Color(0xFFF5F7FB),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = icon,
-                fontSize = 12.sp
-            )
+            Text(text = icon, fontSize = 12.sp)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Black,
-                fontWeight = FontWeight.Medium
+                color = Color.Black
             )
         }
     }
