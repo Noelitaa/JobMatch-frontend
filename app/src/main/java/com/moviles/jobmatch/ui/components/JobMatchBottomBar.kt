@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.moviles.jobmatch.navigation.AppDestinations
 import com.moviles.jobmatch.ui.theme.JobMatchColors
 
 sealed class BottomNavItem(
@@ -21,11 +22,11 @@ sealed class BottomNavItem(
     val title: String,
     val icon: ImageVector
 ) {
-    object Inicio : BottomNavItem("inicio", "Inicio", Icons.Outlined.Home)
-    object Explorar : BottomNavItem("explorar", "Explorar", Icons.Outlined.Search)
-    object Trabajos : BottomNavItem("trabajos", "Mis Trabajos", Icons.Outlined.Work)
-    object Alertas : BottomNavItem("alertas", "Alertas", Icons.Outlined.Notifications)
-    object Perfil : BottomNavItem("perfil", "Perfil", Icons.Outlined.Person)
+    object Inicio : BottomNavItem(AppDestinations.SEARCH_COMPANY, "Inicio", Icons.Outlined.Home)
+    object Explorar : BottomNavItem(AppDestinations.JOBS_EXPLORE, "Explorar", Icons.Outlined.Search)
+    object Trabajos : BottomNavItem(AppDestinations.MY_JOBS, "Mis Trabajos", Icons.Outlined.Work)
+    object Alertas : BottomNavItem(AppDestinations.ALERTS, "Alertas", Icons.Outlined.Notifications)
+    object Perfil : BottomNavItem(AppDestinations.PROFILE, "Perfil", Icons.Outlined.Person)
 }
 
 @Composable
