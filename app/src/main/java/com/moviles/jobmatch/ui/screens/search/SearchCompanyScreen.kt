@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.ui.components.CompanyCard
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
+import com.moviles.jobmatch.data.AuthSession
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,15 +61,18 @@ fun SearchCompanyScreen(
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     )
                 )
-
+                val isCompany = AuthSession.isCompany
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = onJobCreated,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Crear Trabajo")
+                if (isCompany) {
+                    Button(
+                        onClick = onJobCreated,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Crear Trabajo")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(

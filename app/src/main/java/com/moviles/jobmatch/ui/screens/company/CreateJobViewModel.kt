@@ -50,7 +50,7 @@ class CreateJobViewModel : ViewModel() {
             )
 
             when (val result = jobRepository.createJob(request)) {
-                is ApiResult.Success -> _uiState.value = CreateJobUiState.Success
+                is ApiResult.Success<*> -> _uiState.value = CreateJobUiState.Success
                 is ApiResult.Error -> _uiState.value = CreateJobUiState.Error(result.message)
             }
         }

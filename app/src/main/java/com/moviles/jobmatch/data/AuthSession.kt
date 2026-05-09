@@ -13,4 +13,10 @@ object AuthSession {
     fun clear() {
         currentUser = null
     }
+
+    val isCompany: Boolean
+        get() = currentUser?.role?.lowercase() == "company"
+
+    val isStudent: Boolean
+        get() = currentUser?.role?.lowercase() == "student"
 }
