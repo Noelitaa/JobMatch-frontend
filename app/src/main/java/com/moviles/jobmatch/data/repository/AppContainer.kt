@@ -10,4 +10,8 @@ object AppContainer {
     val authRepository: AuthRepository by lazy {
         AuthRepository(RetrofitClient.apiService)
     }
+
+    val jobRepository: JobRepository by lazy {
+        JobRepository(RetrofitClient.apiService)
+    }
 }

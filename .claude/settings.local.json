@@ -6,7 +6,10 @@
       "Bash(Format-Table FullName)",
       "Bash(./gradlew assembleDebug)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Usuario\\\\Documents\\\\GitHub\\\\JobMatch-front\" -Force)",
+      "Bash(Select-Object Mode, Name)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Usuario\\\\Documents\\\\GitHub\\\\JobMatch-front\\\\app\" -Recurse -Depth 3 | Where-Object { $_.PSIsContainer } | Select-Object FullName)"
     ]
   }
 }
