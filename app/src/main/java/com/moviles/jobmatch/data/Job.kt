@@ -1,6 +1,7 @@
 package com.moviles.jobmatch.data
 
 data class Job(
+    val idJob: Int = 0,
     val idCompany: String,
     val title: String,
     val description: String,

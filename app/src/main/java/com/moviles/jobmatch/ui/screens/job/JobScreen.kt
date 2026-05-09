@@ -25,7 +25,7 @@ import com.moviles.jobmatch.ui.theme.DarkBlue
 @Composable
 fun JobsScreen(
     viewModel: JobsViewModel,
-    onJobClick: (String) -> Unit = {}
+    onJobClick: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val categories = listOf("Todos", "Eventos", "Logística", "Oficina", "Más")
@@ -92,7 +92,7 @@ fun JobsScreen(
         } else {
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
                 items(uiState.jobs) { job ->
-                    JobCard(job = job, onSeeMoreClick = { onJobClick(job.idCompany) })
+                    JobCard(job = job, onSeeMoreClick = { onJobClick(job.idJob) })
                 }
             }
         }

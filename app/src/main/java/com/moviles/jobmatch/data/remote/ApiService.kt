@@ -4,6 +4,7 @@ import com.moviles.jobmatch.core.AppConstants
 import com.moviles.jobmatch.data.Company
 import com.moviles.jobmatch.data.CompanySummary
 import com.moviles.jobmatch.data.Job
+import com.moviles.jobmatch.data.remote.model.JobDetailResponse
 import com.moviles.jobmatch.data.remote.model.LoginRequest
 import com.moviles.jobmatch.data.remote.model.LoginResponse
 import com.moviles.jobmatch.data.remote.model.RegisterResponse
@@ -38,4 +39,7 @@ interface ApiService {
 
     @POST("jobs")
     suspend fun createJob(@Body request: CreateJobRequest): Response<CreateJobResponse>
+  
+    @GET("jobs/{jobId}")
+    suspend fun getJobById(@Path("jobId") jobId: Int): Response<JobDetailResponse>
 }
