@@ -14,6 +14,7 @@ object AppDestinations {
     const val MY_JOBS = "mis_trabajos"
     const val ALERTS = "alertas"
     const val PROFILE = "perfil"
+    const val STUDENT_PROFILE = "student_profile"
 
     fun companyProfileRoute(companyId: String): String {
         return "$COMPANY_PROFILE/${Uri.encode(companyId)}"

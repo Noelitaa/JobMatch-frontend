@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.clickable
+import com.moviles.jobmatch.ui.components.SectionHeader
 val JobMatchBlue = Color(0xFF2196F3)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +87,7 @@ fun CreateJobScreen(
         ) {
 
             // Sección Información Básica
-            SectionHeader(icon = Icons.Outlined.BusinessCenter, title = "Información Básica")
+            SectionHeader(title = "Información Básica")
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Título del puesto", style = MaterialTheme.typography.bodyMedium,
@@ -118,7 +118,7 @@ fun CreateJobScreen(
             Divider(color = Color.LightGray.copy(alpha = 0.5f))
 
             // Sección Pago y Modalidad
-            SectionHeader(icon = Icons.Outlined.AttachMoney, title = "Pago y Modalidad")
+            SectionHeader(title = "Pago y Modalidad")
 
             // Selector de tipo de pago
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -165,7 +165,7 @@ fun CreateJobScreen(
             Divider(color = Color.LightGray.copy(alpha = 0.5f))
 
             // Sección Fecha y Ubicación
-            SectionHeader(icon = Icons.Outlined.CalendarMonth, title = "Fecha")
+            SectionHeader(title = "Fecha")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -232,7 +232,7 @@ fun CreateJobScreen(
             Divider(color = Color.LightGray.copy(alpha = 0.5f))
 
             // Sección Requisitos
-            SectionHeader(icon = Icons.Outlined.Assignment, title = "Requisitos específicos")
+            SectionHeader(title = "Requisitos específicos")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -378,15 +378,3 @@ fun CreateJobScreen(
     }
 }
 
-@Composable
-fun SectionHeader(icon: ImageVector, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(icon, contentDescription = null,
-            tint = JobMatchBlue, modifier = Modifier.size(22.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold, color = Color.Black)
-    }
-}
