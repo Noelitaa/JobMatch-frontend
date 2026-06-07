@@ -1,0 +1,34 @@
+package com.moviles.jobmatch.ui.screens.job
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.moviles.jobmatch.data.remote.model.JobDetailResponse
+import com.moviles.jobmatch.data.repository.ApiResult
+import com.moviles.jobmatch.data.repository.AppContainer
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+sealed class JobDetailUiState {
+    data object Loading : JobDetailUiState()
+    data class Success(val job: JobDetailResponse) : JobDetailUiState()
+    data class Error(val message: String) : JobDetailUiState()
+}
+
+class JobDetailViewModel : ViewModel() {
+    private val repository = AppContainer.jobRepository
+
+    private val _uiState = MutableStateFlow<JobDetailUiState>(JobDetailUiState.Loading)
+    val uiState: StateFlow<JobDetailUiState> = _uiState.asStateFlow()
+
+    fun loadJobDetail(jobId: Int) {
+        viewModelScope.launch {
+            _uiState.value = JobDetailUiState.Loading
+            when (val result = repository.getJobById(jobId)) {
+                is ApiResult.Success -> _uiState.value = JobDetailUiState.Success(result.data)
+                is ApiResult.Error -> _uiState.value = JobDetailUiState.Error(result.message)
+            }
+        }
+    }
+}

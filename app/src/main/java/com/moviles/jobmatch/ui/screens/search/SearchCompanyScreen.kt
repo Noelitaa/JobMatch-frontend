@@ -1,8 +1,12 @@
 package com.moviles.jobmatch.ui.screens.search
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,12 +16,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.ui.components.CompanyCard
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
+import com.moviles.jobmatch.data.AuthSession
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchCompanyScreen(
     onCompanySelected: (String) -> Unit,
     onBackPressed: () -> Unit = {},
+    onJobCreated: () -> Unit = {},
     viewModel: SearchCompanyViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -55,9 +61,20 @@ fun SearchCompanyScreen(
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     )
                 )
-
+                val isCompany = AuthSession.isCompany
                 Spacer(modifier = Modifier.height(12.dp))
-
+                if (isCompany) {
+                    Button(
+                        onClick = onJobCreated,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Crear Trabajo")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = { viewModel.searchExactCompany { companyId ->
                         onCompanySelected(companyId)
