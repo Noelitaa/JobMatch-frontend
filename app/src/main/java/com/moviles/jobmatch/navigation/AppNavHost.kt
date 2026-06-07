@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import com.moviles.jobmatch.data.repository.JobRepository
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
+import com.moviles.jobmatch.ui.screens.job.ApplicationsScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
@@ -40,7 +41,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             if (currentRoute != AppDestinations.SPLASH &&
                 currentRoute != AppDestinations.LOGIN &&
                 currentRoute != AppDestinations.REGISTER &&
-                currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true) {
+                currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
+                currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true) {
 
                 JobMatchBottomBar(
                     currentRoute = currentRoute ?: AppDestinations.SEARCH_COMPANY,
@@ -158,6 +160,25 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
                 JobDetailScreen(
                     jobId = jobId,
+                    onBackPressed = { navController.popBackStack() },
+                    onViewApplicants = { id, title ->
+                        navController.navigate(AppDestinations.applicationsRoute(id, title))
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.APPLICATIONS}/{jobId}/{jobTitle}",
+                arguments = listOf(
+                    navArgument("jobId") { type = NavType.IntType },
+                    navArgument("jobTitle") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val jobTitle = backStackEntry.arguments?.getString("jobTitle").orEmpty()
+                ApplicationsScreen(
+                    jobId = jobId,
+                    jobTitle = jobTitle,
                     onBackPressed = { navController.popBackStack() }
                 )
             }
