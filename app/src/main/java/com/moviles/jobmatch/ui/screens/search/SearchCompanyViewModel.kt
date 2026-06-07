@@ -2,8 +2,9 @@ package com.moviles.jobmatch.ui.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.moviles.jobmatch.data.CompanyMap
 import com.moviles.jobmatch.data.CompanySummary
+import com.moviles.jobmatch.data.repository.ApiResult
+import com.moviles.jobmatch.data.repository.CompanyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,18 +15,21 @@ import kotlinx.coroutines.launch
 
 data class SearchUiState(
     val searchText: String = "",
+    val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val filteredCompanies: List<CompanySummary> = emptyList()
 )
 
 class SearchCompanyViewModel : ViewModel() {
+    private val repository = CompanyRepository()
+
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private var allCompanies: List<CompanySummary> = emptyList()
 
     init {
-        loadCompaniesFromMap()
+        loadCompaniesFromApi()
 
         viewModelScope.launch {
             _uiState
@@ -38,15 +42,25 @@ class SearchCompanyViewModel : ViewModel() {
         }
     }
 
-    private fun loadCompaniesFromMap() {
-        allCompanies = CompanyMap.companies.map { (name, id) ->
-            CompanySummary(
-                id = id,
-                companyName = name,
-                email = ""
-            )
+    private fun loadCompaniesFromApi() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            when (val result = repository.getAllCompanies()) {
+                is ApiResult.Success -> {
+                    allCompanies = result.data
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        filteredCompanies = allCompanies
+                    )
+                }
+                is ApiResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+            }
         }
-        _uiState.value = _uiState.value.copy(filteredCompanies = allCompanies)
     }
 
     fun updateSearchText(text: String) {
@@ -61,7 +75,7 @@ class SearchCompanyViewModel : ViewModel() {
             allCompanies
         } else {
             allCompanies.filter { company ->
-                company.companyName.contains(query, ignoreCase = true)
+                company.companyName?.contains(query, ignoreCase = true) == true
             }
         }
         _uiState.value = _uiState.value.copy(filteredCompanies = filtered)
@@ -72,7 +86,7 @@ class SearchCompanyViewModel : ViewModel() {
         if (query.isBlank()) return
 
         val found = allCompanies.find { company ->
-            company.companyName.equals(query, ignoreCase = true)
+            company.companyName?.equals(query, ignoreCase = true) == true
         }
 
         if (found == null) {
