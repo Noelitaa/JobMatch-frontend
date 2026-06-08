@@ -24,7 +24,7 @@ sealed class BottomNavItem(
 ) {
     object Inicio : BottomNavItem(AppDestinations.SEARCH_COMPANY, "Inicio", Icons.Outlined.Home)
     object Explorar : BottomNavItem(AppDestinations.JOBS_EXPLORE, "Explorar", Icons.Outlined.Search)
-    object Trabajos : BottomNavItem(AppDestinations.MY_JOBS, "Mis Trabajos", Icons.Outlined.Work)
+    object Trabajos : BottomNavItem(AppDestinations.MY_JOBS, "Trabajos", Icons.Outlined.Work)
     object Alertas : BottomNavItem(AppDestinations.ALERTS, "Alertas", Icons.Outlined.Notifications)
     object Perfil : BottomNavItem(AppDestinations.PROFILE, "Perfil", Icons.Outlined.Person)
 }
