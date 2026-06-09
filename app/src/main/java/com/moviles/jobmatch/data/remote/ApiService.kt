@@ -15,6 +15,7 @@ import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
+import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -55,4 +56,8 @@ interface ApiService {
         @Path("applicationId") applicationId: Int,
         @Body request: UpdateApplicationRequest
     ): Response<UpdateApplicationResponse>
+    @GET(AppConstants.Api.Paths.STUDENT_PROFILE_PATH)
+    suspend fun getStudentProfile(
+        @Path("studentId") studentId: String
+    ): Response<StudentProfileResponse>
 }

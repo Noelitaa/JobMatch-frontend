@@ -27,6 +27,7 @@ import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
+import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 import com.moviles.jobmatch.data.AuthSession
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -127,7 +128,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(route = AppDestinations.PROFILE) {
-                PlaceholderScreen("Perfil")
+                StudentProfileScreen()
+            }
+
+            composable(route = AppDestinations.STUDENT_PROFILE) {
+                StudentProfileScreen()
             }
 
             composable(
