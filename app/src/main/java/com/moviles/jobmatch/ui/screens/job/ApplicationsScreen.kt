@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
+import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.theme.DarkBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -171,10 +172,22 @@ private fun ApplicantCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     application.studentUniversity?.let {
-                        InfoChip(label = it)
+                        SkillChip(
+                            text = it,
+                            backgroundColor = Color(0xFFF5F5F5),
+                            textColor = Color(0xFF5A6A7A),
+                            shape = RoundedCornerShape(8.dp),
+                            fontSize = 11.sp
+                        )
                     }
                     application.studentCareer?.let {
-                        InfoChip(label = it)
+                        SkillChip(
+                            text = it,
+                            backgroundColor = Color(0xFFF5F5F5),
+                            textColor = Color(0xFF5A6A7A),
+                            shape = RoundedCornerShape(8.dp),
+                            fontSize = 11.sp
+                        )
                     }
                 }
             }
@@ -238,14 +251,3 @@ private fun StatusChip(status: String) {
     }
 }
 
-@Composable
-private fun InfoChip(label: String) {
-    Surface(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp)) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            fontSize = 11.sp,
-            color = Color(0xFF5A6A7A)
-        )
-    }
-}
