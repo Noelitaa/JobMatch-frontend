@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.moviles.jobmatch.data.CompanySummary
 import com.moviles.jobmatch.data.repository.ApiResult
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.data.repository.CompanyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,7 @@ data class SearchUiState(
 )
 
 class SearchCompanyViewModel : ViewModel() {
-    private val repository = CompanyRepository()
+    private val repository = AppContainer.companyRepository
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()

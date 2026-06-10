@@ -11,6 +11,7 @@ object AppDestinations {
     const val COMPANY_PROFILE = "company_profile"
     const val CREATE_JOB = "create_job/{companyId}"
     const val JOB_DETAIL = "job_detail"
+    const val COMPANY_DASHBOARD = "company_dashboard"
     const val MY_JOBS = "mis_trabajos"
     const val ALERTS = "alertas"
     const val PROFILE = "perfil"
