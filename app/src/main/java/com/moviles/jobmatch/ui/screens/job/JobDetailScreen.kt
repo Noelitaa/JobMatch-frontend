@@ -38,6 +38,7 @@ import java.util.Locale
 fun JobDetailScreen(
     jobId: Int,
     onBackPressed: () -> Unit = {},
+    onEditJob: (Int) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,7 +78,14 @@ fun JobDetailScreen(
         },
         bottomBar = {
             if (uiState is JobDetailUiState.Success) {
-                JobDetailBottomBar()
+                val job = (uiState as JobDetailUiState.Success).job
+                if (com.moviles.jobmatch.data.AuthSession.isCompany) {
+                    CompanyJobBottomBar(
+                        onEdit = { onEditJob(job.idJob) }
+                    )
+                } else {
+                    JobDetailBottomBar()
+                }
             }
         },
         containerColor = Color(0xFFF8F9FB)
@@ -819,6 +827,38 @@ private fun JobDetailBottomBar() {
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompanyJobBottomBar(onEdit: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 12.dp,
+        color = Color.White
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .navigationBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = onEdit,
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Editar Oferta", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }

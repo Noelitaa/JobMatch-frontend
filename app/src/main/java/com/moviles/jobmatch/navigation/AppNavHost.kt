@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import com.moviles.jobmatch.data.repository.JobRepository
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
+import com.moviles.jobmatch.ui.screens.job.EditJobScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
@@ -41,7 +42,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             if (currentRoute != AppDestinations.SPLASH &&
                 currentRoute != AppDestinations.LOGIN &&
                 currentRoute != AppDestinations.REGISTER &&
-                currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true) {
+                currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
+                currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true) {
 
                 JobMatchBottomBar(
                     currentRoute = currentRoute ?: AppDestinations.SEARCH_COMPANY,
@@ -163,7 +165,20 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
                 JobDetailScreen(
                     jobId = jobId,
-                    onBackPressed = { navController.popBackStack() }
+                    onBackPressed = { navController.popBackStack() },
+                    onEditJob = { id -> navController.navigate(AppDestinations.editJobRoute(id)) }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.EDIT_JOB}/{jobId}",
+                arguments = listOf(navArgument("jobId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                EditJobScreen(
+                    jobId = jobId,
+                    onBackPressed = { navController.popBackStack() },
+                    onJobUpdated = { navController.popBackStack() }
                 )
             }
         }

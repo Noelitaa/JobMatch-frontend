@@ -12,11 +12,13 @@ import com.moviles.jobmatch.data.remote.model.RegisterCompanyRequest
 import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobResponse
+import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiService {
@@ -43,6 +45,12 @@ interface ApiService {
   
     @GET("jobs/{jobId}")
     suspend fun getJobById(@Path("jobId") jobId: Int): Response<JobDetailResponse>
+
+    @PUT("jobs/{jobId}")
+    suspend fun updateJob(
+        @Path("jobId") jobId: Int,
+        @Body request: UpdateJobRequest
+    ): Response<JobDetailResponse>
 
     @GET(AppConstants.Api.Paths.STUDENT_PROFILE_PATH)
     suspend fun getStudentProfile(
