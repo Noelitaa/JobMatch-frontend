@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.remote.model.JobDetailResponse
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import java.text.SimpleDateFormat
@@ -39,6 +40,7 @@ import java.util.Locale
 fun JobDetailScreen(
     jobId: Int,
     onBackPressed: () -> Unit = {},
+    onViewApplicants: (Int, String) -> Unit = { _, _ -> },
     onEditJob: (Int) -> Unit = {},
     onCompanyClick: (String) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
@@ -81,8 +83,9 @@ fun JobDetailScreen(
         bottomBar = {
             if (uiState is JobDetailUiState.Success) {
                 val job = (uiState as JobDetailUiState.Success).job
-                if (com.moviles.jobmatch.data.AuthSession.isCompany) {
+                if (AuthSession.isCompany) {
                     CompanyJobBottomBar(
+                        onViewApplicants = { onViewApplicants(job.idJob, job.title) },
                         onEdit = { onEditJob(job.idJob) }
                     )
                 } else {
@@ -853,29 +856,42 @@ private fun JobDetailBottomBar() {
 }
 
 @Composable
-private fun CompanyJobBottomBar(onEdit: () -> Unit) {
+private fun CompanyJobBottomBar(onViewApplicants: () -> Unit, onEdit: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
         color = Color.White
     ) {
-        Button(
-            onClick = onEdit,
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
-                .navigationBarsPadding()
-                .height(50.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                .navigationBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Editar Oferta", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            OutlinedButton(
+                onClick = onViewApplicants,
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.5.dp, DarkBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+            ) {
+                Text("Ver Postulantes", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
+            Button(
+                onClick = onEdit,
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Editar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
         }
     }
 }

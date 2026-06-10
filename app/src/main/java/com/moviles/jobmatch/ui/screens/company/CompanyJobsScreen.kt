@@ -32,7 +32,7 @@ import java.util.Locale
 fun CompanyJobsScreen(
     onCreateJob: () -> Unit = {},
     onEditJob: (Int) -> Unit = {},
-    onJobClick: (Int) -> Unit = {},
+    onJobClick: (Int, String) -> Unit = { _, _ -> },
     viewModel: CompanyDashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -159,7 +159,7 @@ fun CompanyJobsScreen(
                             ManageJobCard(
                                 job = job,
                                 onEdit = { onEditJob(job.idJob) },
-                                onViewApplicants = { onJobClick(job.idJob) }
+                                onViewApplicants = { onJobClick(job.idJob, job.title) }
                             )
                         }
                     }
