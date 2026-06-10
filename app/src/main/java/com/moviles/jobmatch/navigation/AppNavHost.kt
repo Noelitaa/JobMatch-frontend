@@ -28,7 +28,6 @@ import com.moviles.jobmatch.ui.screens.job.JobsViewModel
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
-import com.moviles.jobmatch.ui.screens.search.SearchCompanyScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 
 @Composable

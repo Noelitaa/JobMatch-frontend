@@ -8,6 +8,7 @@ import com.moviles.jobmatch.data.repository.ApiResult
 import com.moviles.jobmatch.data.repository.AppContainer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class CompanyDashboardUiState(
@@ -20,7 +21,7 @@ class CompanyDashboardViewModel : ViewModel() {
     private val jobRepository = AppContainer.jobRepository
 
     private val _uiState = MutableStateFlow(CompanyDashboardUiState())
-    val uiState: StateFlow<CompanyDashboardUiState> = _uiState
+    val uiState: StateFlow<CompanyDashboardUiState> = _uiState.asStateFlow()
 
     fun loadMyJobs() {
         viewModelScope.launch {
@@ -28,6 +29,7 @@ class CompanyDashboardViewModel : ViewModel() {
             val companyId = AuthSession.currentUser?.userId ?: return@launch
             when (val result = jobRepository.getJobs()) {
                 is ApiResult.Success -> {
+                    // Temporary client-side filter until backend exposes GET /jobs?companyId=xxx
                     val myJobs = result.data.filter { it.idCompany == companyId }
                     _uiState.value = _uiState.value.copy(isLoading = false, jobs = myJobs)
                 }
