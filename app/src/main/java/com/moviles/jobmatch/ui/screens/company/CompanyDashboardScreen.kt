@@ -45,13 +45,30 @@ fun CompanyDashboardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(DarkBlue),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.BusinessCenter,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
                 title = {
                     Text(
-                        "SME Hub",
+                        "Dashboard",
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
-                        color = DarkBlue
+                        color = Color(0xFF1A1A2E)
                     )
                 },
                 actions = {
@@ -63,7 +80,7 @@ fun CompanyDashboardScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color(0xFFF4F6FA)

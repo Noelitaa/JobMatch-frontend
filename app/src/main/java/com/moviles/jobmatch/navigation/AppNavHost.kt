@@ -21,6 +21,7 @@ import com.moviles.jobmatch.data.repository.JobRepository
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
+import com.moviles.jobmatch.ui.screens.company.CompanyJobsScreen
 import com.moviles.jobmatch.ui.screens.company.CreateJobScreen
 import com.moviles.jobmatch.ui.screens.job.EditJobScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
@@ -126,7 +127,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.JOBS_EXPLORE) {
                 if (AuthSession.isCompany) {
-                    PlaceholderScreen("Trabajos")
+                    val companyId = AuthSession.currentUser?.userId ?: ""
+                    CompanyJobsScreen(
+                        onCreateJob = {
+                            navController.navigate(AppDestinations.createJobRoute(companyId))
+                        },
+                        onEditJob = { id ->
+                            navController.navigate(AppDestinations.editJobRoute(id))
+                        },
+                        onJobClick = { id ->
+                            navController.navigate(AppDestinations.jobDetailRoute(id))
+                        }
+                    )
                 } else {
                     val apiService = com.moviles.jobmatch.data.remote.RetrofitClient.apiService
                     val repository = JobRepository(apiService)
