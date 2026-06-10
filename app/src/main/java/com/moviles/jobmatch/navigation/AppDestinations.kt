@@ -11,6 +11,7 @@ object AppDestinations {
     const val COMPANY_PROFILE = "company_profile"
     const val CREATE_JOB = "create_job/{companyId}"
     const val JOB_DETAIL = "job_detail"
+    const val APPLICATIONS = "applications"
     const val COMPANY_DASHBOARD = "company_dashboard"
     const val MY_JOBS = "mis_trabajos"
     const val ALERTS = "alertas"
@@ -25,4 +26,6 @@ object AppDestinations {
         return "create_job/${Uri.encode(companyId)}"
     }
     fun jobDetailRoute(jobId: Int): String = "$JOB_DETAIL/$jobId"
+    fun applicationsRoute(jobId: Int, jobTitle: String): String =
+        "$APPLICATIONS/$jobId/${Uri.encode(jobTitle)}"
 }

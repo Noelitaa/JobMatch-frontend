@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.remote.model.JobDetailResponse
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import java.text.SimpleDateFormat
@@ -39,6 +40,7 @@ import java.util.Locale
 fun JobDetailScreen(
     jobId: Int,
     onBackPressed: () -> Unit = {},
+    onViewApplicants: (Int, String) -> Unit = { _, _ -> },
     onCompanyClick: (String) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
 ) {
@@ -79,7 +81,14 @@ fun JobDetailScreen(
         },
         bottomBar = {
             if (uiState is JobDetailUiState.Success) {
-                JobDetailBottomBar()
+                val job = (uiState as JobDetailUiState.Success).job
+                if (AuthSession.isCompany) {
+                    CompanyJobBottomBar(
+                        onViewApplicants = { onViewApplicants(job.idJob, job.title) }
+                    )
+                } else {
+                    JobDetailBottomBar()
+                }
             }
         },
         containerColor = Color(0xFFF8F9FB)
@@ -840,6 +849,28 @@ private fun JobDetailBottomBar() {
                     modifier = Modifier.size(18.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun CompanyJobBottomBar(onViewApplicants: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 12.dp,
+        color = Color.White
+    ) {
+        Button(
+            onClick = onViewApplicants,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .navigationBarsPadding()
+                .height(50.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+        ) {
+            Text("Ver Postulantes", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
     }
 }
