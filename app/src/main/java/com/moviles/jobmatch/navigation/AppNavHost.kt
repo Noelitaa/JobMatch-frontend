@@ -17,7 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.data.AuthSession
-import com.moviles.jobmatch.data.repository.JobRepository
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyJobsScreen
@@ -142,12 +142,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         }
                     )
                 } else {
-                    val apiService = com.moviles.jobmatch.data.remote.RetrofitClient.apiService
-                    val repository = JobRepository(apiService)
                     val jobsViewModel: JobsViewModel = viewModel(
                         factory = object : androidx.lifecycle.ViewModelProvider.Factory {
                             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                                return JobsViewModel(repository) as T
+                                return JobsViewModel(AppContainer.jobRepository) as T
                             }
                         }
                     )

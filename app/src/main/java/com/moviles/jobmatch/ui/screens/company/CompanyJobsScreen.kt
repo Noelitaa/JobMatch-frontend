@@ -20,9 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.Job
 import com.moviles.jobmatch.ui.theme.DarkBlue
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.moviles.jobmatch.ui.utils.formatJobDate
+import com.moviles.jobmatch.ui.utils.formatPaymentType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -356,29 +355,3 @@ private fun ManageJobCard(
     }
 }
 
-private fun formatJobDate(dateStr: String): String {
-    return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val date = sdf.parse(dateStr) ?: return dateStr
-        val today = Date()
-        val diffMs = date.time - today.time
-        val diffDays = (diffMs / (1000 * 60 * 60 * 24)).toInt()
-        when {
-            diffDays == 0 -> "hoy"
-            diffDays == 1 -> "mañana"
-            diffDays == -1 -> "ayer"
-            diffDays > 0 -> "en $diffDays días"
-            else -> SimpleDateFormat("dd 'de' MMM", Locale("es")).format(date)
-        }
-    } catch (e: Exception) {
-        dateStr
-    }
-}
-
-private fun formatPaymentType(type: String): String = when (type.lowercase()) {
-    "fixed", "fijo" -> "Fijo"
-    "hourly", "hora", "por hora" -> "Por Hora"
-    "daily", "diario" -> "Diario"
-    "weekly", "semanal" -> "Semanal"
-    else -> type.replaceFirstChar { it.uppercase() }
-}

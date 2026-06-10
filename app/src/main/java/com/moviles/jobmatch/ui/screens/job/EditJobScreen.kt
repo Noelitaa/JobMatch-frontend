@@ -34,55 +34,18 @@ fun EditJobScreen(
     viewModel: EditJobViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var payment by remember { mutableStateOf("") }
-    var paymentType by remember { mutableStateOf("Hora") }
-    var workDate by remember { mutableStateOf("") }
-    var startTime by remember { mutableStateOf("") }
-    var endTime by remember { mutableStateOf("") }
-    var skillInput by remember { mutableStateOf("") }
-    var skills by remember { mutableStateOf(listOf<String>()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var initialized by remember { mutableStateOf(false) }
-
-    val paymentTypes = listOf("Hora", "Turno", "Proyecto")
+    val formState by viewModel.formState.collectAsStateWithLifecycle()
 
     LaunchedEffect(jobId) {
         viewModel.loadJob(jobId)
     }
 
     LaunchedEffect(uiState) {
-        when (val state = uiState) {
-            is EditJobUiState.JobLoaded -> {
-                if (!initialized) {
-                    val job = state.job
-                    title = job.title
-                    description = job.description
-                    payment = job.payment.toBigDecimal().stripTrailingZeros().toPlainString()
-                    paymentType = when (job.paymentType.lowercase()) {
-                        "hora", "por hora" -> "Hora"
-                        "turno" -> "Turno"
-                        "proyecto" -> "Proyecto"
-                        else -> job.paymentType
-                    }
-                    workDate = job.workDate.take(10)
-                    startTime = job.startTime.take(5)
-                    endTime = job.endTime.take(5)
-                    skills = job.deliverables
-                        ?.split(",")
-                        ?.map { it.trim() }
-                        ?.filter { it.isNotEmpty() }
-                        ?: emptyList()
-                    initialized = true
-                }
-            }
-            is EditJobUiState.SaveSuccess -> onJobUpdated()
-            is EditJobUiState.Error -> errorMessage = state.message
-            else -> {}
-        }
+        if (uiState is EditJobUiState.SaveSuccess) onJobUpdated()
     }
+
+    val paymentTypes = listOf("Hora", "Turno", "Proyecto")
+    val isLoading = uiState is EditJobUiState.Loading
 
     Scaffold(
         topBar = {
@@ -96,69 +59,52 @@ fun EditJobScreen(
             )
         }
     ) { padding ->
-        when (uiState) {
-            is EditJobUiState.Loading -> {
-                if (!initialized) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(padding),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator(color = DarkBlue) }
-                } else {
-                    EditJobForm(
-                        padding = padding,
-                        title = title, onTitleChange = { title = it },
-                        description = description, onDescriptionChange = { description = it },
-                        payment = payment, onPaymentChange = { payment = it },
-                        paymentType = paymentType, onPaymentTypeChange = { paymentType = it },
-                        paymentTypes = paymentTypes,
-                        workDate = workDate, onWorkDateChange = { workDate = it },
-                        startTime = startTime, onStartTimeChange = { startTime = it },
-                        endTime = endTime, onEndTimeChange = { endTime = it },
-                        skillInput = skillInput, onSkillInputChange = { skillInput = it },
-                        skills = skills, onSkillsChange = { skills = it },
-                        errorMessage = errorMessage,
-                        isLoading = true,
-                        onSave = {}
-                    )
+        when {
+            uiState is EditJobUiState.Loading && formState.title.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator(color = DarkBlue) }
+            }
+            uiState is EditJobUiState.Error && formState.title.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Text(
+                            (uiState as EditJobUiState.Error).message,
+                            color = Color.Gray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.loadJob(jobId) },
+                            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                        ) { Text("Reintentar") }
+                    }
                 }
             }
             else -> {
                 EditJobForm(
                     padding = padding,
-                    title = title, onTitleChange = { title = it },
-                    description = description, onDescriptionChange = { description = it },
-                    payment = payment, onPaymentChange = { payment = it },
-                    paymentType = paymentType, onPaymentTypeChange = { paymentType = it },
+                    formState = formState,
                     paymentTypes = paymentTypes,
-                    workDate = workDate, onWorkDateChange = { workDate = it },
-                    startTime = startTime, onStartTimeChange = { startTime = it },
-                    endTime = endTime, onEndTimeChange = { endTime = it },
-                    skillInput = skillInput, onSkillInputChange = { skillInput = it },
-                    skills = skills, onSkillsChange = { skills = it },
-                    errorMessage = errorMessage,
-                    isLoading = false,
-                    onSave = {
-                        errorMessage = null
-                        when {
-                            title.isBlank() -> errorMessage = "El título es requerido"
-                            description.isBlank() -> errorMessage = "La descripción es requerida"
-                            workDate.isBlank() -> errorMessage = "La fecha es requerida"
-                            startTime.isBlank() -> errorMessage = "La hora de inicio es requerida"
-                            endTime.isBlank() -> errorMessage = "La hora de fin es requerida"
-                            payment.isBlank() -> errorMessage = "El monto es requerido"
-                            else -> viewModel.saveJob(
-                                jobId = jobId,
-                                title = title,
-                                description = description,
-                                payment = payment.toDoubleOrNull() ?: 0.0,
-                                paymentType = paymentType,
-                                workDate = workDate,
-                                startTime = startTime,
-                                endTime = endTime,
-                                deliverables = skills
-                            )
-                        }
-                    }
+                    isLoading = isLoading,
+                    onTitleChange = viewModel::updateTitle,
+                    onDescriptionChange = viewModel::updateDescription,
+                    onPaymentChange = viewModel::updatePayment,
+                    onPaymentTypeChange = viewModel::updatePaymentType,
+                    onWorkDateChange = viewModel::updateWorkDate,
+                    onStartTimeChange = viewModel::updateStartTime,
+                    onEndTimeChange = viewModel::updateEndTime,
+                    onSkillInputChange = viewModel::updateSkillInput,
+                    onAddSkill = viewModel::addSkill,
+                    onRemoveSkill = viewModel::removeSkill,
+                    onSave = { viewModel.saveJob(jobId) }
                 )
             }
         }
@@ -168,18 +114,19 @@ fun EditJobScreen(
 @Composable
 private fun EditJobForm(
     padding: PaddingValues,
-    title: String, onTitleChange: (String) -> Unit,
-    description: String, onDescriptionChange: (String) -> Unit,
-    payment: String, onPaymentChange: (String) -> Unit,
-    paymentType: String, onPaymentTypeChange: (String) -> Unit,
+    formState: EditFormState,
     paymentTypes: List<String>,
-    workDate: String, onWorkDateChange: (String) -> Unit,
-    startTime: String, onStartTimeChange: (String) -> Unit,
-    endTime: String, onEndTimeChange: (String) -> Unit,
-    skillInput: String, onSkillInputChange: (String) -> Unit,
-    skills: List<String>, onSkillsChange: (List<String>) -> Unit,
-    errorMessage: String?,
     isLoading: Boolean,
+    onTitleChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onPaymentChange: (String) -> Unit,
+    onPaymentTypeChange: (String) -> Unit,
+    onWorkDateChange: (String) -> Unit,
+    onStartTimeChange: (String) -> Unit,
+    onEndTimeChange: (String) -> Unit,
+    onSkillInputChange: (String) -> Unit,
+    onAddSkill: () -> Unit,
+    onRemoveSkill: (Int) -> Unit,
     onSave: () -> Unit
 ) {
     Column(
@@ -190,32 +137,40 @@ private fun EditJobForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Información Básica
-        EditSectionHeader(icon = { Icon(Icons.Outlined.BusinessCenter, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) }, title = "Información Básica")
+        EditSectionHeader(
+            icon = { Icon(Icons.Outlined.BusinessCenter, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) },
+            title = "Información Básica"
+        )
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Título del puesto", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             OutlinedTextField(
-                value = title, onValueChange = onTitleChange,
-                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                value = formState.title,
+                onValueChange = onTitleChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp)
             )
             Text("Descripción completa", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             OutlinedTextField(
-                value = description, onValueChange = onDescriptionChange,
+                value = formState.description,
+                onValueChange = onDescriptionChange,
                 modifier = Modifier.fillMaxWidth().height(120.dp),
-                maxLines = 5, shape = RoundedCornerShape(8.dp)
+                maxLines = 5,
+                shape = RoundedCornerShape(8.dp)
             )
         }
 
         HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-        // Pago y Modalidad
-        EditSectionHeader(icon = { Icon(Icons.Outlined.AttachMoney, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) }, title = "Pago y Modalidad")
+        EditSectionHeader(
+            icon = { Icon(Icons.Outlined.AttachMoney, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) },
+            title = "Pago y Modalidad"
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             paymentTypes.forEach { type ->
-                val selected = paymentType == type
+                val selected = formState.paymentType == type
                 OutlinedButton(
                     onClick = { onPaymentTypeChange(type) },
                     shape = RoundedCornerShape(20.dp),
@@ -234,7 +189,8 @@ private fun EditJobForm(
         }
 
         OutlinedTextField(
-            value = payment, onValueChange = onPaymentChange,
+            value = formState.payment,
+            onValueChange = onPaymentChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Monto estimado (₡)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -245,37 +201,47 @@ private fun EditJobForm(
 
         HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-        // Fecha y Horario
-        EditSectionHeader(icon = { Icon(Icons.Outlined.CalendarMonth, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) }, title = "Fecha")
+        EditSectionHeader(
+            icon = { Icon(Icons.Outlined.CalendarMonth, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) },
+            title = "Fecha"
+        )
 
         OutlinedTextField(
-            value = workDate, onValueChange = onWorkDateChange,
+            value = formState.workDate,
+            onValueChange = onWorkDateChange,
             label = { Text("Fecha (YYYY-MM-DD)") },
-            modifier = Modifier.fillMaxWidth(), singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
             shape = RoundedCornerShape(8.dp)
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
-                value = startTime, onValueChange = onStartTimeChange,
+                value = formState.startTime,
+                onValueChange = onStartTimeChange,
                 label = { Text("Hora inicio") },
                 placeholder = { Text("08:00") },
-                modifier = Modifier.weight(1f), singleLine = true,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp)
             )
             OutlinedTextField(
-                value = endTime, onValueChange = onEndTimeChange,
+                value = formState.endTime,
+                onValueChange = onEndTimeChange,
                 label = { Text("Hora fin") },
                 placeholder = { Text("17:00") },
-                modifier = Modifier.weight(1f), singleLine = true,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp)
             )
         }
 
         HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-        // Requisitos
-        EditSectionHeader(icon = { Icon(Icons.Outlined.Assignment, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) }, title = "Requisitos específicos")
+        EditSectionHeader(
+            icon = { Icon(Icons.Outlined.Assignment, null, tint = DarkBlue, modifier = Modifier.size(22.dp)) },
+            title = "Requisitos específicos"
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -283,18 +249,15 @@ private fun EditJobForm(
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = skillInput, onValueChange = onSkillInputChange,
+                value = formState.skillInput,
+                onValueChange = onSkillInputChange,
                 placeholder = { Text("Añadir requisito...", color = Color.Gray) },
-                modifier = Modifier.weight(1f), singleLine = true,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp)
             )
             Button(
-                onClick = {
-                    if (skillInput.isNotBlank()) {
-                        onSkillsChange(skills + skillInput.trim())
-                        onSkillInputChange("")
-                    }
-                },
+                onClick = onAddSkill,
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 contentPadding = PaddingValues(12.dp),
@@ -305,9 +268,10 @@ private fun EditJobForm(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            skills.forEachIndexed { index, skill ->
+            formState.skills.forEachIndexed { index, skill ->
                 Surface(
-                    shape = RoundedCornerShape(20.dp), color = Color.White,
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White,
                     modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
                 ) {
                     Row(
@@ -317,10 +281,11 @@ private fun EditJobForm(
                         Text(skill, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
-                            Icons.Default.Close, contentDescription = "Eliminar",
-                            modifier = Modifier.size(16.dp).clickable {
-                                onSkillsChange(skills.toMutableList().also { it.removeAt(index) })
-                            },
+                            Icons.Default.Close,
+                            contentDescription = "Eliminar",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { onRemoveSkill(index) },
                             tint = Color.Gray
                         )
                     }
@@ -328,7 +293,7 @@ private fun EditJobForm(
             }
         }
 
-        errorMessage?.let {
+        formState.errorMessage?.let {
             Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 

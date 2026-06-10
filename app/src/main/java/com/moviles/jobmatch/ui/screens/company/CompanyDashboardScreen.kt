@@ -25,9 +25,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.Job
 import com.moviles.jobmatch.ui.theme.DarkBlue
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.moviles.jobmatch.ui.utils.formatJobDate
+import com.moviles.jobmatch.ui.utils.formatPaymentType
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -309,7 +309,7 @@ private fun DashboardJobCard(job: Job, onManage: () -> Unit) {
                     ) {
                         StatusBadge(job.status)
                         Text(
-                            "· ${formatDate(job.workDate)}",
+                            "· ${formatJobDate(job.workDate)}",
                             fontSize = 12.sp,
                             color = Color(0xFF8A9BB0)
                         )
@@ -336,40 +336,8 @@ private fun DashboardJobCard(job: Job, onManage: () -> Unit) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.End
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    repeat(3) { i ->
-                        Box(
-                            modifier = Modifier
-                                .size(26.dp)
-                                .offset(x = (-6 * i).dp)
-                                .clip(CircleShape)
-                                .background(
-                                    listOf(
-                                        Color(0xFFE3F2FD),
-                                        Color(0xFFFFF3E0),
-                                        Color(0xFFE8F5E9)
-                                    )[i]
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                listOf("AB", "CD", "EF")[i],
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DarkBlue
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text("Postulantes", fontSize = 12.sp, color = Color(0xFF8A9BB0))
-                }
-
                 TextButton(
                     onClick = onManage,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
@@ -488,29 +456,4 @@ private fun EmptyJobsCard(onCreateJob: () -> Unit) {
     }
 }
 
-private fun formatDate(dateStr: String): String {
-    return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val date = sdf.parse(dateStr) ?: return dateStr
-        val today = Date()
-        val diffMs = date.time - today.time
-        val diffDays = (diffMs / (1000 * 60 * 60 * 24)).toInt()
-        when {
-            diffDays == 0 -> "Hoy"
-            diffDays == 1 -> "Mañana"
-            diffDays == -1 -> "Ayer"
-            diffDays > 0 -> "En $diffDays días"
-            else -> SimpleDateFormat("dd MMM", Locale("es")).format(date)
-        }
-    } catch (e: Exception) {
-        dateStr
-    }
-}
-
-private fun formatPaymentType(type: String): String = when (type.lowercase()) {
-    "fixed", "fijo" -> "pago fijo"
-    "hourly", "hora", "por hora" -> "por hora"
-    "daily", "diario" -> "por día"
-    else -> type.lowercase()
-}
 
