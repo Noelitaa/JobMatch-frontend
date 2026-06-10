@@ -173,60 +173,29 @@ fun CompanyJobsScreen(
 
 @Composable
 private fun JobsStatsRow(jobCount: Int) {
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "$jobCount",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 28.sp,
-                    color = DarkBlue
-                )
-                Text(
-                    "ACTIVOS",
-                    fontSize = 11.sp,
-                    color = Color(0xFF8A9BB0),
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F0FE)),
-            elevation = CardDefaults.cardElevation(0.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "—",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 28.sp,
-                    color = DarkBlue
-                )
-                Text(
-                    "POSTULANTES",
-                    fontSize = 11.sp,
-                    color = DarkBlue.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
-                )
-            }
+            Text(
+                "$jobCount",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp,
+                color = DarkBlue
+            )
+            Text(
+                "ACTIVOS",
+                fontSize = 11.sp,
+                color = Color(0xFF8A9BB0),
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.5.sp
+            )
         }
     }
 }
