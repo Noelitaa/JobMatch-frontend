@@ -17,6 +17,8 @@ object AppContainer {
 
     val applicationRepository: ApplicationRepository by lazy {
         ApplicationRepository(RetrofitClient.apiService)
+    }
+
     val studentRepository: StudentRepository by lazy {
         StudentRepository(RetrofitClient.apiService)
     }
