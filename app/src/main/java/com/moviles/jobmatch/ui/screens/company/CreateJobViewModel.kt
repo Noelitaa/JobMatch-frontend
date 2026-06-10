@@ -38,12 +38,12 @@ class CreateJobViewModel : ViewModel() {
             _uiState.value = CreateJobUiState.Loading
 
             val request = CreateJobRequest(
-                idCompany = companyId,
+                companyId = companyId,
                 title = title,
                 description = description,
                 payment = payment,
                 paymentType = paymentType,
-                workDate = workDate,
+                date = workDate,
                 startTime = startTime,
                 endTime = endTime,
                 deliverables = skills

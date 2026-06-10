@@ -32,7 +32,7 @@ interface ApiService {
     suspend fun registerCompany(@Body request: RegisterCompanyRequest): Response<RegisterResponse>
 
     @GET("companies/{companyId}")
-    suspend fun getCompanyProfile(@Path("companyId") companyId: String): Company
+    suspend fun getCompanyProfile(@Path("companyId") companyId: String): Response<Company>
 
     @GET("companies")
     suspend fun getAllCompanies(): List<CompanySummary>
