@@ -322,9 +322,9 @@ private fun DashboardJobCard(job: Job, onManage: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        StatusBadge()
+                        StatusBadge(job.status)
                         Text(
-                            "· ${formatDate(job.date)}",
+                            "· ${formatDate(job.workDate)}",
                             fontSize = 12.sp,
                             color = Color(0xFF8A9BB0)
                         )
@@ -403,16 +403,29 @@ private fun DashboardJobCard(job: Job, onManage: () -> Unit) {
 }
 
 @Composable
-private fun StatusBadge() {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFFE8F5E9)
-    ) {
+private fun StatusBadge(status: String) {
+    val label = when (status.lowercase()) {
+        "open", "active" -> "Activo"
+        "in-progress" -> "En Progreso"
+        "paused", "closed" -> "Pausado"
+        else -> status.replaceFirstChar { it.uppercase() }
+    }
+    val bgColor = when (status.lowercase()) {
+        "open", "active" -> Color(0xFFE8F5E9)
+        "in-progress" -> Color(0xFFE3F2FD)
+        else -> Color(0xFFF5F5F5)
+    }
+    val textColor = when (status.lowercase()) {
+        "open", "active" -> Color(0xFF2E7D32)
+        "in-progress" -> Color(0xFF1565C0)
+        else -> Color(0xFF757575)
+    }
+    Surface(shape = RoundedCornerShape(20.dp), color = bgColor) {
         Text(
-            "Activo",
+            label,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             fontSize = 11.sp,
-            color = Color(0xFF2E7D32),
+            color = textColor,
             fontWeight = FontWeight.SemiBold
         )
     }

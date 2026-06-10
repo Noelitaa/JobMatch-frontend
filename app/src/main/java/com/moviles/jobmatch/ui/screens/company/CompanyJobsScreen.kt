@@ -231,7 +231,7 @@ private fun ManageJobCard(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        "Trabajo el ${formatJobDate(job.date)}",
+                        "Trabajo el ${formatJobDate(job.workDate)}",
                         fontSize = 12.sp,
                         color = Color(0xFF8A9BB0)
                     )
@@ -330,13 +330,25 @@ private fun ManageJobCard(
 
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFFE8F5E9)
+                    color = when (job.status.lowercase()) {
+                        "open", "active" -> Color(0xFFE8F5E9)
+                        "in-progress" -> Color(0xFFE3F2FD)
+                        else -> Color(0xFFF5F5F5)
+                    }
                 ) {
                     Text(
-                        "Activo",
+                        when (job.status.lowercase()) {
+                            "open", "active" -> "Activo"
+                            "in-progress" -> "En Progreso"
+                            else -> "Pausado"
+                        },
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                         fontSize = 11.sp,
-                        color = Color(0xFF2E7D32),
+                        color = when (job.status.lowercase()) {
+                            "open", "active" -> Color(0xFF2E7D32)
+                            "in-progress" -> Color(0xFF1565C0)
+                            else -> Color(0xFF757575)
+                        },
                         fontWeight = FontWeight.SemiBold
                     )
                 }
