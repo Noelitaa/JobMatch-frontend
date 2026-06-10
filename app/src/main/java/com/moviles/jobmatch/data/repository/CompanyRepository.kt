@@ -3,6 +3,7 @@ package com.moviles.jobmatch.data.repository
 import com.moviles.jobmatch.data.Company
 import com.moviles.jobmatch.data.CompanySummary
 import com.moviles.jobmatch.data.remote.ApiService
+import java.io.IOException
 
 sealed class ApiResult<out T> {
     data class Success<T>(val data: T) : ApiResult<T>()
@@ -14,7 +15,13 @@ class CompanyRepository(private val apiService: ApiService) {
     suspend fun getCompanyById(companyId: String): ApiResult<Company> {
         return try {
             val response = apiService.getCompanyProfile(companyId)
-            ApiResult.Success(response)
+            if (response.isSuccessful && response.body() != null) {
+                ApiResult.Success(response.body()!!)
+            } else {
+                ApiResult.Error("Error al cargar la empresa (${response.code()})", response.code())
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("No se pudo conectar al servidor")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al cargar la empresa")
         }
