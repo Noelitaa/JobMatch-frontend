@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -40,6 +41,7 @@ fun JobDetailScreen(
     jobId: Int,
     onBackPressed: () -> Unit = {},
     onViewApplicants: (Int, String) -> Unit = { _, _ -> },
+    onCompanyClick: (String) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -106,6 +108,7 @@ fun JobDetailScreen(
             is JobDetailUiState.Success -> {
                 JobDetailContent(
                     job = state.job,
+                    onCompanyClick = onCompanyClick,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -150,14 +153,18 @@ fun JobDetailScreen(
 }
 
 @Composable
-private fun JobDetailContent(job: JobDetailResponse, modifier: Modifier = Modifier) {
+private fun JobDetailContent(
+    job: JobDetailResponse,
+    onCompanyClick: (String) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
-        item { JobHeaderCard(job = job) }
+        item { JobHeaderCard(job = job, onCompanyClick = onCompanyClick) }
         item { InfoCardsRow(job = job) }
         item { CompatibilityCard() }
         item { DescriptionCard(job = job) }
@@ -171,7 +178,7 @@ private fun JobDetailContent(job: JobDetailResponse, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun JobHeaderCard(job: JobDetailResponse) {
+private fun JobHeaderCard(job: JobDetailResponse, onCompanyClick: (String) -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -227,18 +234,31 @@ private fun JobHeaderCard(job: JobDetailResponse) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable { onCompanyClick(job.company.id) }
+                    .padding(vertical = 4.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Default.Business,
                     contentDescription = null,
-                    tint = Color.Gray,
+                    tint = DarkBlue,
                     modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = job.company.companyName ?: "Empresa",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = DarkBlue,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = DarkBlue,
+                    modifier = Modifier.size(14.dp)
                 )
             }
         }

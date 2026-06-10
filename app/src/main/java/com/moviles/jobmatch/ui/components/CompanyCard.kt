@@ -30,7 +30,7 @@ fun CompanyCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = company.companyName,
+                text = company.companyName ?: "Sin nombre",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
