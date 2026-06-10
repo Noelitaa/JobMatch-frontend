@@ -226,28 +226,13 @@ private fun CompanyHeaderCard(companyName: String) {
 
 @Composable
 private fun StatsGrid(jobs: List<Job>) {
-    val activeCount = jobs.size
-    val totalPayment = jobs.sumOf { it.payment }
-
-    Row(
+    StatCard(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        StatCard(
-            modifier = Modifier.weight(1f),
-            label = "Puestos Activos",
-            value = "$activeCount",
-            badge = null,
-            valueColor = Color(0xFF1A1A2E)
-        )
-        StatCard(
-            modifier = Modifier.weight(1f),
-            label = "Presupuesto Total",
-            value = "₡${formatCompact(totalPayment)}",
-            badge = null,
-            valueColor = Color(0xFF1A1A2E)
-        )
-    }
+        label = "Puestos Activos",
+        value = "${jobs.size}",
+        badge = null,
+        valueColor = Color(0xFF1A1A2E)
+    )
 }
 
 @Composable
@@ -529,10 +514,3 @@ private fun formatPaymentType(type: String): String = when (type.lowercase()) {
     else -> type.lowercase()
 }
 
-private fun formatCompact(value: Double): String {
-    return when {
-        value >= 1_000_000 -> "${"%.1f".format(value / 1_000_000)}M"
-        value >= 1_000 -> "${"%.0f".format(value / 1_000)}K"
-        else -> "%.0f".format(value)
-    }
-}

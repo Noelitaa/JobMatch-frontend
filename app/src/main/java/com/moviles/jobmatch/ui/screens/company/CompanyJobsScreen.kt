@@ -1,10 +1,8 @@
 package com.moviles.jobmatch.ui.screens.company
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -206,8 +203,6 @@ private fun ManageJobCard(
     onEdit: () -> Unit,
     onViewApplicants: () -> Unit
 ) {
-    var visible by remember { mutableStateOf(true) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -294,40 +289,8 @@ private fun ManageJobCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.End
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    repeat(3) { i ->
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .offset(x = (-5 * i).dp)
-                                .clip(CircleShape)
-                                .background(
-                                    listOf(
-                                        Color(0xFFBBDEFB),
-                                        Color(0xFFFFF9C4),
-                                        Color(0xFFC8E6C9)
-                                    )[i]
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                listOf("A", "B", "C")[i],
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DarkBlue
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Candidatos", fontSize = 12.sp, color = Color(0xFF8A9BB0))
-                }
-
                 Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = when (job.status.lowercase()) {
@@ -363,57 +326,30 @@ private fun ManageJobCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Switch(
-                        checked = visible,
-                        onCheckedChange = { visible = it },
-                        modifier = Modifier.height(24.dp),
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = DarkBlue,
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0xFFCCCCCC)
-                        )
-                    )
-                    Text(
-                        if (visible) "Visible" else "Oculta",
-                        fontSize = 12.sp,
-                        color = if (visible) Color(0xFF3A4A5A) else Color(0xFF8A9BB0)
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = "Editar",
+                        tint = Color(0xFF8A9BB0),
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Button(
+                    onClick = onViewApplicants,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    IconButton(
-                        onClick = onEdit,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.Edit,
-                            contentDescription = "Editar",
-                            tint = Color(0xFF8A9BB0),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Button(
-                        onClick = onViewApplicants,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Text(
-                            "Ver Postulantes",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        "Ver Postulantes",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
