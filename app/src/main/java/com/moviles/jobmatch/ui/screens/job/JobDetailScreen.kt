@@ -39,7 +39,6 @@ import java.util.Locale
 fun JobDetailScreen(
     jobId: Int,
     onBackPressed: () -> Unit = {},
-    onViewApplicants: (Int, String) -> Unit = { _, _ -> },
     onEditJob: (Int) -> Unit = {},
     onCompanyClick: (String) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
@@ -84,7 +83,6 @@ fun JobDetailScreen(
                 val job = (uiState as JobDetailUiState.Success).job
                 if (com.moviles.jobmatch.data.AuthSession.isCompany) {
                     CompanyJobBottomBar(
-                        onViewApplicants = { onViewApplicants(job.idJob, job.title) },
                         onEdit = { onEditJob(job.idJob) }
                     )
                 } else {
@@ -855,46 +853,29 @@ private fun JobDetailBottomBar() {
 }
 
 @Composable
-private fun CompanyJobBottomBar(onViewApplicants: () -> Unit, onEdit: () -> Unit) {
+private fun CompanyJobBottomBar(onEdit: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
         color = Color.White
     ) {
-        Row(
+        Button(
+            onClick = onEdit,
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
-                .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .navigationBarsPadding()
+                .height(50.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
         ) {
-            OutlinedButton(
-                onClick = onViewApplicants,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.5.dp, DarkBlue),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
-            ) {
-                Text("Ver Postulantes", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            }
-            Button(
-                onClick = onEdit,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Editar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            }
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Editar Oferta", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
     }
 }
