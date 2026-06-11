@@ -13,6 +13,17 @@ data class CreateJobRequest(
     val deliverables: List<String>? = null
 )
 
+data class UpdateJobRequest(
+    val title: String? = null,
+    val description: String? = null,
+    val payment: Double? = null,
+    val paymentType: String? = null,
+    val workDate: String? = null,
+    val startTime: String? = null,
+    val endTime: String? = null,
+    val deliverables: List<String>? = null
+)
+
 data class CreateJobResponse(
     val idJob: Int,
     val idCompany: String,

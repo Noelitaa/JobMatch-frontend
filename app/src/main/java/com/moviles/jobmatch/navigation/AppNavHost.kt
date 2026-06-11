@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,12 +18,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.data.AuthSession
-import com.moviles.jobmatch.data.repository.JobRepository
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
+import com.moviles.jobmatch.ui.screens.company.CompanyJobsScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
 import com.moviles.jobmatch.ui.screens.company.CreateJobScreen
 import com.moviles.jobmatch.ui.screens.job.ApplicationsScreen
+import com.moviles.jobmatch.ui.screens.job.EditJobScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
@@ -46,6 +49,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.REGISTER &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
+            currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true
 
     Scaffold(
@@ -126,14 +130,23 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.JOBS_EXPLORE) {
                 if (AuthSession.isCompany) {
-                    PlaceholderScreen("Trabajos")
+                    val companyId = AuthSession.currentUser?.userId ?: ""
+                    CompanyJobsScreen(
+                        onCreateJob = {
+                            navController.navigate(AppDestinations.createJobRoute(companyId))
+                        },
+                        onEditJob = { id ->
+                            navController.navigate(AppDestinations.editJobRoute(id))
+                        },
+                        onJobClick = { id, title ->
+                            navController.navigate(AppDestinations.applicationsRoute(id, title))
+                        }
+                    )
                 } else {
-                    val apiService = com.moviles.jobmatch.data.remote.RetrofitClient.apiService
-                    val repository = JobRepository(apiService)
                     val jobsViewModel: JobsViewModel = viewModel(
                         factory = object : androidx.lifecycle.ViewModelProvider.Factory {
                             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                                return JobsViewModel(repository) as T
+                                return JobsViewModel(AppContainer.jobRepository) as T
                             }
                         }
                     )
@@ -190,14 +203,37 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 arguments = listOf(navArgument("jobId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("refresh_key", 0)
+                    .collectAsStateWithLifecycle()
                 JobDetailScreen(
                     jobId = jobId,
+                    refreshKey = refreshKey,
                     onBackPressed = { navController.popBackStack() },
                     onViewApplicants = { id, title ->
                         navController.navigate(AppDestinations.applicationsRoute(id, title))
                     },
+                    onEditJob = { id ->
+                        navController.navigate(AppDestinations.editJobRoute(id))
+                    },
                     onCompanyClick = { companyId ->
                         navController.navigate(AppDestinations.companyProfileRoute(companyId))
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.EDIT_JOB}/{jobId}",
+                arguments = listOf(navArgument("jobId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                EditJobScreen(
+                    jobId = jobId,
+                    onBackPressed = { navController.popBackStack() },
+                    onJobUpdated = {
+                        val prev = navController.previousBackStackEntry?.savedStateHandle
+                        prev?.set("refresh_key", (prev.get<Int>("refresh_key") ?: 0) + 1)
+                        navController.popBackStack()
                     }
                 )
             }
