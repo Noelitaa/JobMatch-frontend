@@ -39,6 +39,7 @@ import java.util.Locale
 @Composable
 fun JobDetailScreen(
     jobId: Int,
+    refreshKey: Int = 0,
     onBackPressed: () -> Unit = {},
     onViewApplicants: (Int, String) -> Unit = { _, _ -> },
     onEditJob: (Int) -> Unit = {},
@@ -47,7 +48,7 @@ fun JobDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(jobId) {
+    LaunchedEffect(jobId, refreshKey) {
         viewModel.loadJobDetail(jobId)
     }
 

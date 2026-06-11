@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -202,8 +203,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 arguments = listOf(navArgument("jobId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("refresh_key", 0)
+                    .collectAsStateWithLifecycle()
                 JobDetailScreen(
                     jobId = jobId,
+                    refreshKey = refreshKey,
                     onBackPressed = { navController.popBackStack() },
                     onViewApplicants = { id, title ->
                         navController.navigate(AppDestinations.applicationsRoute(id, title))
@@ -225,7 +230,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 EditJobScreen(
                     jobId = jobId,
                     onBackPressed = { navController.popBackStack() },
-                    onJobUpdated = { navController.popBackStack() }
+                    onJobUpdated = {
+                        val prev = navController.previousBackStackEntry?.savedStateHandle
+                        prev?.set("refresh_key", (prev.get<Int>("refresh_key") ?: 0) + 1)
+                        navController.popBackStack()
+                    }
                 )
             }
 
