@@ -23,6 +23,22 @@ fun formatJobDate(dateStr: String): String {
     }
 }
 
+fun formatApplicationDate(isoDate: String): String {
+    return try {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = sdf.parse(isoDate) ?: return isoDate
+        SimpleDateFormat("dd 'de' MMM yyyy", Locale("es")).format(date)
+    } catch (e: Exception) {
+        try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(isoDate) ?: return isoDate
+            SimpleDateFormat("dd 'de' MMM yyyy", Locale("es")).format(date)
+        } catch (e2: Exception) {
+            isoDate
+        }
+    }
+}
+
 fun formatPaymentType(type: String): String = when (type.lowercase()) {
     "fixed", "fijo" -> "Fijo"
     "hourly", "hora", "por hora" -> "Por hora"
