@@ -19,6 +19,8 @@ object AppDestinations {
     const val PROFILE = "perfil"
     const val STUDENT_PROFILE = "student_profile"
 
+    const val AVAILABILITY = "availability"
+
     fun companyProfileRoute(companyId: String): String {
         return "$COMPANY_PROFILE/${Uri.encode(companyId)}"
     }

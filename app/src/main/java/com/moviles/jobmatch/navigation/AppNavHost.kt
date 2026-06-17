@@ -33,6 +33,7 @@ import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
+import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -167,14 +168,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 PlaceholderScreen("Alertas")
             }
 
-            composable(route = AppDestinations.PROFILE) {
-                StudentProfileScreen()
-            }
-
-            composable(route = AppDestinations.STUDENT_PROFILE) {
-                StudentProfileScreen()
-            }
-
             composable(
                 route = AppDestinations.CREATE_JOB,
                 arguments = listOf(navArgument("companyId") { type = NavType.StringType })
@@ -251,6 +244,24 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     jobId = jobId,
                     jobTitle = jobTitle,
                     onBackPressed = { navController.popBackStack() }
+                )
+            }
+            composable(route = AppDestinations.PROFILE) {
+                StudentProfileScreen(
+                    onEditAvailability = { navController.navigate(AppDestinations.AVAILABILITY) }
+                )
+            }
+
+            composable(route = AppDestinations.STUDENT_PROFILE) {
+                StudentProfileScreen(
+                    onEditAvailability = { navController.navigate(AppDestinations.AVAILABILITY) }
+                )
+            }
+
+            composable(route = AppDestinations.AVAILABILITY) {
+                AvailabilityScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
                 )
             }
         }

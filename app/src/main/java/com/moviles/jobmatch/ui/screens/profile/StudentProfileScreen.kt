@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.repository.AppContainer
+import com.moviles.jobmatch.navigation.AppDestinations
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.InfoRow
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
@@ -54,7 +55,8 @@ import com.moviles.jobmatch.ui.theme.DarkBlue
 
 @Composable
 fun StudentProfileScreen(
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onEditAvailability: () -> Unit = {}
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(AppContainer.studentRepository)
@@ -216,7 +218,7 @@ fun StudentProfileScreen(
                         SectionHeader(
                             title = "Disponibilidad",
                             actionText = "Editar",
-                            onActionClick = {}
+                            onActionClick = onEditAvailability
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
