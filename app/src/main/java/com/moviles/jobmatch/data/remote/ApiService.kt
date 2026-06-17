@@ -18,6 +18,8 @@ import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
+import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -80,4 +82,9 @@ interface ApiService {
         @Path("studentId") studentId: String,
         @Body body: AvailabilityResponse
     ): Response<AvailabilityResponse>
+
+    @POST("payments")
+    suspend fun createPayment(
+        @Body request: CreatePaymentRequest
+    ): Response<CreatePaymentResponse>
 }
