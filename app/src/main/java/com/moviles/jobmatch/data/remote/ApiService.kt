@@ -15,9 +15,12 @@ import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
+import com.moviles.jobmatch.data.remote.model.AddSkillRequest
+import com.moviles.jobmatch.data.remote.model.AddSkillResponse
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -60,4 +63,19 @@ interface ApiService {
     suspend fun getStudentProfile(
         @Path("studentId") studentId: String
     ): Response<StudentProfileResponse>
+
+    @GET(AppConstants.Api.Paths.SKILLS_PATH)
+    suspend fun getAllSkills(): Response<List<String>>
+
+    @POST(AppConstants.Api.Paths.STUDENT_SKILLS_PATH)
+    suspend fun addSkillToStudent(
+        @Path("studentId") studentId: String,
+        @Body request: AddSkillRequest
+    ): Response<AddSkillResponse>
+
+    @DELETE("students/{studentId}/skills/{skillId}")
+    suspend fun removeSkillFromStudent(
+        @Path("studentId") studentId: String,
+        @Path("skillId") skillId: String
+    ): Response<Unit>
 }

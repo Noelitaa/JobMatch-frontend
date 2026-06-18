@@ -26,13 +26,18 @@ data class UserProfileResponse(
     val active: Boolean
 )
 
+data class StudentSkillResponse(
+    val skillId: String,
+    val skillName: String
+)
+
 data class StudentProfileResponse(
     val id: String,
     val user: UserProfileResponse,
     val university: String,
     val career: String,
     val studentId: String,
-    val skills: List<String>,
+    val skills: List<StudentSkillResponse>,
     val availability: AvailabilityResponse?,
     val averageRating: Float
 )

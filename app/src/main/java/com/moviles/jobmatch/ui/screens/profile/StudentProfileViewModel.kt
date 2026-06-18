@@ -28,6 +28,10 @@ class StudentProfileViewModel(private val studentRepository: StudentRepository) 
         loadProfile()
     }
 
+    fun refreshProfile() {
+        loadProfile()
+    }
+
     fun loadProfile() {
         val studentId = AuthSession.currentUser?.userId ?: return
         viewModelScope.launch {

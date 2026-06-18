@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
+import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.InfoRow
@@ -54,12 +56,22 @@ import com.moviles.jobmatch.ui.theme.DarkBlue
 
 @Composable
 fun StudentProfileScreen(
+    refreshKey: Int = 0,
+    onEditSkills: (studentId: String, currentSkills: List<StudentSkillResponse>) -> Unit = { _, _ -> },
     onSettingsClick: () -> Unit = {}
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(AppContainer.studentRepository)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) viewModel.loadProfile()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshProfile()
+    }
 
     Scaffold(
         topBar = {
@@ -189,8 +201,8 @@ fun StudentProfileScreen(
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SectionHeader(
                             title = "Habilidades",
-                            actionText = "Ver todas",
-                            onActionClick = {}
+                            actionText = "Editar",
+                            onActionClick = { student?.let { s -> onEditSkills(s.id, s.skills) } }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         if (skills.isNotEmpty()) {
@@ -198,7 +210,7 @@ fun StudentProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                skills.forEach { skill -> SkillChip(skill) }
+                                skills.forEach { skill -> SkillChip(skill.skillName) }
                             }
                         } else {
                             Text(

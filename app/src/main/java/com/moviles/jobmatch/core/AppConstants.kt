@@ -12,6 +12,8 @@ object AppConstants {
             const val AUTH_REGISTER_STUDENT = "auth/register"
             const val AUTH_REGISTER_COMPANY = "auth/register/company"
             const val STUDENT_PROFILE_PATH = "students/{studentId}"
+            const val SKILLS_PATH = "skills"
+            const val STUDENT_SKILLS_PATH = "students/{studentId}/skills"
         }
     }
 }

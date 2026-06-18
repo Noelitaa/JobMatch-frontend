@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,7 +17,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.gson.Gson
 import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
 import com.moviles.jobmatch.data.repository.JobRepository
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
@@ -29,6 +32,7 @@ import com.moviles.jobmatch.ui.screens.job.JobsViewModel
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
+import com.moviles.jobmatch.ui.screens.profile.SkillSelectionScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 
 @Composable
@@ -46,7 +50,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.REGISTER &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
-            currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true
+            currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
+            currentRoute?.startsWith(AppDestinations.SKILL_SELECTION) != true
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -154,12 +159,28 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 PlaceholderScreen("Alertas")
             }
 
-            composable(route = AppDestinations.PROFILE) {
-                StudentProfileScreen()
+            composable(route = AppDestinations.PROFILE) { backStackEntry ->
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("profile_refresh_key", 0)
+                    .collectAsStateWithLifecycle()
+                StudentProfileScreen(
+                    refreshKey = refreshKey,
+                    onEditSkills = { studentId, skills ->
+                        navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    }
+                )
             }
 
-            composable(route = AppDestinations.STUDENT_PROFILE) {
-                StudentProfileScreen()
+            composable(route = AppDestinations.STUDENT_PROFILE) { backStackEntry ->
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("profile_refresh_key", 0)
+                    .collectAsStateWithLifecycle()
+                StudentProfileScreen(
+                    refreshKey = refreshKey,
+                    onEditSkills = { studentId, skills ->
+                        navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    }
+                )
             }
 
             composable(
@@ -215,6 +236,31 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     jobId = jobId,
                     jobTitle = jobTitle,
                     onBackPressed = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.SKILL_SELECTION}/{studentId}?currentSkills={currentSkills}",
+                arguments = listOf(
+                    navArgument("studentId") { type = NavType.StringType },
+                    navArgument("currentSkills") { type = NavType.StringType; defaultValue = "" }
+                )
+            ) { backStackEntry ->
+                val studentId = backStackEntry.arguments?.getString("studentId").orEmpty()
+                val currentSkillsJson = backStackEntry.arguments?.getString("currentSkills").orEmpty()
+                val currentSkills: List<StudentSkillResponse> = if (currentSkillsJson.isBlank()) emptyList()
+                    else try {
+                        Gson().fromJson(currentSkillsJson, Array<StudentSkillResponse>::class.java).toList()
+                    } catch (e: Exception) { emptyList() }
+                SkillSelectionScreen(
+                    studentId = studentId,
+                    currentSkills = currentSkills,
+                    onBackPressed = { navController.popBackStack() },
+                    onSaveSuccess = {
+                        val prev = navController.previousBackStackEntry?.savedStateHandle
+                        prev?.set("profile_refresh_key", (prev.get<Int>("profile_refresh_key") ?: 0) + 1)
+                        navController.popBackStack()
+                    }
                 )
             }
         }
