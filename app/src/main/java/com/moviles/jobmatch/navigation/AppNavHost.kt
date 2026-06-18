@@ -172,11 +172,23 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(route = AppDestinations.PROFILE) {
-                StudentProfileScreen()
+                StudentProfileScreen(
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(route = AppDestinations.STUDENT_PROFILE) {
-                StudentProfileScreen()
+                StudentProfileScreen(
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(
@@ -198,7 +210,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 val id = backStackEntry.arguments?.getString("companyId").orEmpty()
                 CompanyProfileScreen(
                     companyId = id,
-                    onBackPressed = { navController.popBackStack() }
+                    onBackPressed = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 

@@ -17,9 +17,12 @@ import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -68,4 +71,10 @@ interface ApiService {
     suspend fun getStudentProfile(
         @Path("studentId") studentId: String
     ): Response<StudentProfileResponse>
+
+    @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
+    suspend fun deleteUser(
+        @Path("userId") userId: String,
+        @Body request: DeleteUserRequest
+    ): Response<Unit>
 }
