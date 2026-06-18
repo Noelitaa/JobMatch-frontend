@@ -7,10 +7,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,61 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
-import com.moviles.jobmatch.data.repository.ApiResult
 import com.moviles.jobmatch.data.repository.AppContainer
-import com.moviles.jobmatch.data.repository.StudentRepository
 import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.theme.DarkBlue
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
-// --- ViewModel ---
-
-private data class UiState(
-    val isLoading: Boolean = false,
-    val student: StudentProfileResponse? = null,
-    val errorMessage: String? = null
-)
-
-private class StudentPublicProfileViewModel(
-    private val studentId: String,
-    private val repository: StudentRepository
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(UiState(isLoading = true))
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-
-    init { load() }
-
-    fun load() {
-        viewModelScope.launch {
-            _uiState.value = UiState(isLoading = true)
-            when (val result = repository.getStudentProfile(studentId)) {
-                is ApiResult.Success -> _uiState.value = UiState(student = result.data)
-                is ApiResult.Error -> _uiState.value = UiState(errorMessage = result.message)
-            }
-        }
-    }
-}
-
-private class Factory(
-    private val studentId: String,
-    private val repository: StudentRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        @Suppress("UNCHECKED_CAST")
-        return StudentPublicProfileViewModel(studentId, repository) as T
-    }
-}
-
-// --- Screen ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +34,7 @@ fun StudentPublicProfileScreen(
 ) {
     val viewModel: StudentPublicProfileViewModel = viewModel(
         key = studentId,
-        factory = Factory(studentId, AppContainer.studentRepository)
+        factory = StudentPublicProfileViewModel.Factory(studentId, AppContainer.studentRepository)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -94,7 +44,7 @@ fun StudentPublicProfileScreen(
                 title = { Text("Perfil del Estudiante", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackPressed) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -134,7 +84,10 @@ fun StudentPublicProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(student: StudentProfileResponse, modifier: Modifier = Modifier) {
+private fun ProfileContent(
+    student: com.moviles.jobmatch.data.remote.model.StudentProfileResponse,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -142,7 +95,7 @@ private fun ProfileContent(student: StudentProfileResponse, modifier: Modifier =
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Avatar + nombre + rating
+        // Avatar, name, and rating
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -195,7 +148,7 @@ private fun ProfileContent(student: StudentProfileResponse, modifier: Modifier =
             }
         }
 
-        // Info académica
+        // Academic info
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -226,7 +179,7 @@ private fun ProfileContent(student: StudentProfileResponse, modifier: Modifier =
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(Icons.Outlined.WorkOutline, null, tint = DarkBlue, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Outlined.Email, null, tint = DarkBlue, modifier = Modifier.size(20.dp))
                     Text(student.user.email, fontSize = 13.sp, color = Color(0xFF555555))
                 }
             }

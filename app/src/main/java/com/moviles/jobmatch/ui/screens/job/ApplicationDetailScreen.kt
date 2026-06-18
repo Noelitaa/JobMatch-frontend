@@ -5,7 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -39,7 +39,7 @@ fun ApplicationDetailScreen(
                 title = { Text("Detalle de Postulación", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackPressed) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -55,7 +55,7 @@ fun ApplicationDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Status banner
+            // Status banner (color-coded by state)
             val (bgColor, textColor, label) = when (status.lowercase()) {
                 "accepted" -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "Aceptado")
                 "rejected" -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "Rechazado")
@@ -82,7 +82,7 @@ fun ApplicationDetailScreen(
                 }
             }
 
-            // Datos de la postulación
+            // Application details
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -111,7 +111,7 @@ fun ApplicationDetailScreen(
                 }
             }
 
-            // Datos del estudiante
+            // Student data
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -133,7 +133,7 @@ fun ApplicationDetailScreen(
                 }
             }
 
-            // Botón ver perfil completo
+            // View full profile button
             Button(
                 onClick = { onViewStudentProfile(studentId) },
                 modifier = Modifier.fillMaxWidth(),

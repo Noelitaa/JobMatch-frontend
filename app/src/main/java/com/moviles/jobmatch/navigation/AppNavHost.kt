@@ -287,7 +287,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     navArgument("createdAt") { type = NavType.StringType }
                 )
             ) { backStackEntry ->
-                val args = backStackEntry.arguments!!
+                val args = backStackEntry.arguments ?: return@composable
                 ApplicationDetailScreen(
                     applicationId = args.getInt("applicationId"),
                     jobId = args.getInt("jobId"),
