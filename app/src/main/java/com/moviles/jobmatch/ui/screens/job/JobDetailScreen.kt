@@ -191,8 +191,8 @@ private fun JobDetailContent(
         item { InfoCardsRow(job = job) }
         item { CompatibilityCard() }
         item { DescriptionCard(job = job) }
-        if (!job.deliverables.isNullOrBlank()) {
-            item { DeliverablesCard(deliverables = job.deliverables) }
+        if (!job.deliverables.isNullOrEmpty()) {
+            item { DeliverablesCard(deliverables = job.deliverables!!) }
         }
         item { ScheduleCard(job = job) }
         item { LocationCard(job = job) }
@@ -481,9 +481,7 @@ private fun DescriptionCard(job: JobDetailResponse) {
 }
 
 @Composable
-private fun DeliverablesCard(deliverables: String) {
-    val items = deliverables.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
+private fun DeliverablesCard(deliverables: List<String>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -500,7 +498,7 @@ private fun DeliverablesCard(deliverables: String) {
                 color = Color(0xFF1A1A2E)
             )
             Spacer(modifier = Modifier.height(14.dp))
-            items.forEach { item ->
+            deliverables.forEach { item ->
                 Row(
                     modifier = Modifier.padding(vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -589,36 +587,54 @@ private fun ScheduleCard(job: JobDetailResponse) {
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            tint = DarkBlue,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = formatDate(job.workDate),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF1A1A2E)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = DarkBlue,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${formatTime(job.startTime)} - ${formatTime(job.endTime)}",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF1A1A2E)
-                        )
+                    if (job.type == "autonomous") {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${job.startDate?.let { formatDate(it) } ?: "-"} → ${job.endDate?.let { formatDate(it) } ?: "-"}",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = job.workDate?.let { formatDate(it) } ?: "-",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${job.startTime?.let { formatTime(it) } ?: "-"} - ${job.endTime?.let { formatTime(it) } ?: "-"}",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     HorizontalDivider(color = Color(0xFFEEEEEE))
