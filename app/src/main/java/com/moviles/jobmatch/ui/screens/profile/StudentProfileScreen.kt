@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
@@ -302,7 +303,7 @@ fun StudentProfileScreen(
                             }
                             uiState.contractsErrorMessage != null -> {
                                 Text(
-                                    text = uiState.contractsErrorMessage,
+                                    text = uiState.contractsErrorMessage!!,
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
