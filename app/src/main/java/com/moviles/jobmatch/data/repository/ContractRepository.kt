@@ -1,11 +1,15 @@
 package com.moviles.jobmatch.data.repository
 
+import com.google.gson.Gson
 import com.moviles.jobmatch.data.remote.ApiService
+import com.moviles.jobmatch.data.remote.model.ContractData
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import java.io.IOException
 
 class ContractRepository(private val apiService: ApiService) {
+
+    private val gson = Gson()
 
     suspend fun getStudentContracts(): ApiResult<List<ContractListResponse>> {
         return try {
@@ -31,8 +35,13 @@ class ContractRepository(private val apiService: ApiService) {
         return try {
             val response = apiService.getContractById(contractId)
             when {
-                response.isSuccessful && response.body() != null ->
-                    ApiResult.Success(response.body()!!)
+                response.isSuccessful && response.body() != null -> {
+                    val raw = response.body()!!
+                    val parsed = runCatching {
+                        gson.fromJson(raw.contractData, ContractData::class.java)
+                    }.getOrNull()
+                    ApiResult.Success(raw.copy(parsedContractData = parsed))
+                }
                 response.code() == 404 ->
                     ApiResult.Error("Contrato no encontrado", 404)
                 response.code() == 401 ->

@@ -4,12 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.runtime.rememberCoroutineScope
-import com.google.gson.Gson
-import com.moviles.jobmatch.data.remote.model.ContractData
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
-import com.moviles.jobmatch.data.repository.ApiResult
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -61,7 +56,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
-import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
@@ -306,6 +300,13 @@ fun StudentProfileScreen(
                                     )
                                 }
                             }
+                            uiState.contractsErrorMessage != null -> {
+                                Text(
+                                    text = uiState.contractsErrorMessage,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                             contracts.isEmpty() -> {
                                 Text(
                                     text = "Sin contratos registrados",
@@ -316,7 +317,13 @@ fun StudentProfileScreen(
                             else -> {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     contracts.forEach { contract ->
-                                        ContractCard(contract = contract)
+                                        ContractCard(
+                                            contract = contract,
+                                            detail = uiState.contractDetails[contract.idContract],
+                                            isLoadingDetail = contract.idContract in uiState.loadingContractIds,
+                                            detailError = uiState.contractDetailErrors[contract.idContract],
+                                            onExpand = { viewModel.loadContractDetail(contract.idContract) }
+                                        )
                                     }
                                 }
                             }
@@ -397,12 +404,14 @@ fun StudentProfileScreen(
 }
 
 @Composable
-private fun ContractCard(contract: ContractListResponse) {
+private fun ContractCard(
+    contract: ContractListResponse,
+    detail: ContractDetailResponse?,
+    isLoadingDetail: Boolean,
+    detailError: String?,
+    onExpand: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    var isLoadingDetail by remember { mutableStateOf(false) }
-    var detail by remember { mutableStateOf<ContractDetailResponse?>(null) }
-    val scope = rememberCoroutineScope()
-    val gson = remember { Gson() }
 
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -416,22 +425,13 @@ private fun ContractCard(contract: ContractListResponse) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
-            // --- Fila principal (siempre visible) ---
+            // --- Main row (always visible) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
                         expanded = !expanded
-                        if (expanded && detail == null) {
-                            scope.launch {
-                                isLoadingDetail = true
-                                when (val result = AppContainer.contractRepository.getContractById(contract.idContract)) {
-                                    is ApiResult.Success -> detail = result.data
-                                    is ApiResult.Error -> Unit
-                                }
-                                isLoadingDetail = false
-                            }
-                        }
+                        if (expanded) onExpand()
                     }
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -470,10 +470,10 @@ private fun ContractCard(contract: ContractListResponse) {
                 )
             }
 
-            // --- Sección expandible ---
+            // --- Expandable section ---
             AnimatedVisibility(visible = expanded) {
                 Column {
-                    Divider(color = Color(0xFFF0F2F5), thickness = 1.dp)
+                    HorizontalDivider(color = Color(0xFFF0F2F5), thickness = 1.dp)
 
                     when {
                         isLoadingDetail -> {
@@ -491,21 +491,28 @@ private fun ContractCard(contract: ContractListResponse) {
                             }
                         }
 
+                        detailError != null -> {
+                            Text(
+                                text = detailError,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+
                         detail != null -> {
-                            val parsedData = runCatching {
-                                gson.fromJson(detail!!.contractData, ContractData::class.java)
-                            }.getOrNull()
+                            val parsedData = detail.parsedContractData
 
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                // Encabezado
+                                // Header
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Contrato #${detail!!.idContract}",
+                                        text = "Contrato #${detail.idContract}",
                                         style = MaterialTheme.typography.labelMedium,
                                         color = Color(0xFF9AA5B4)
                                     )
@@ -530,13 +537,13 @@ private fun ContractCard(contract: ContractListResponse) {
                                 }
 
                                 Spacer(modifier = Modifier.height(12.dp))
-                                ContractDetailRow(label = "Creado", value = formatApplicationDate(detail!!.createdAt))
-                                detail!!.acceptedAt?.let {
+                                ContractDetailRow(label = "Creado", value = formatApplicationDate(detail.createdAt))
+                                detail.acceptedAt?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Aceptado", value = formatApplicationDate(it))
                                 }
 
-                                // Vigencia del contrato
+                                // Contract period
                                 if (parsedData?.startDate != null || parsedData?.endDate != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     val rangeText = when {
@@ -548,17 +555,17 @@ private fun ContractCard(contract: ContractListResponse) {
                                     ContractDetailRow(label = "Vigencia", value = rangeText)
                                 }
 
-                                // Compensación
+                                // Compensation
                                 parsedData?.compensation?.let { comp ->
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Pago", value = comp)
                                 }
 
                                 Spacer(modifier = Modifier.height(14.dp))
-                                Divider(color = Color(0xFFF0F2F5))
+                                HorizontalDivider(color = Color(0xFFF0F2F5))
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                // Empresa
+                                // Company
                                 Text(
                                     text = "Empresa",
                                     style = MaterialTheme.typography.labelMedium,
@@ -566,7 +573,7 @@ private fun ContractCard(contract: ContractListResponse) {
                                     color = DarkBlue
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
-                                ContractDetailRow(label = "Nombre", value = detail!!.companyName)
+                                ContractDetailRow(label = "Nombre", value = detail.companyName)
                                 parsedData?.companyEmail?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Email", value = it)
@@ -577,10 +584,10 @@ private fun ContractCard(contract: ContractListResponse) {
                                 }
 
                                 Spacer(modifier = Modifier.height(14.dp))
-                                Divider(color = Color(0xFFF0F2F5))
+                                HorizontalDivider(color = Color(0xFFF0F2F5))
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                // Estudiante
+                                // Student
                                 Text(
                                     text = "Estudiante",
                                     style = MaterialTheme.typography.labelMedium,
@@ -588,9 +595,9 @@ private fun ContractCard(contract: ContractListResponse) {
                                     color = DarkBlue
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
-                                ContractDetailRow(label = "Nombre", value = detail!!.studentName)
+                                ContractDetailRow(label = "Nombre", value = detail.studentName)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                ContractDetailRow(label = "Email", value = detail!!.studentEmail)
+                                ContractDetailRow(label = "Email", value = detail.studentEmail)
                                 parsedData?.studentUniversity?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Universidad", value = it)
@@ -600,11 +607,11 @@ private fun ContractCard(contract: ContractListResponse) {
                                     ContractDetailRow(label = "Carrera", value = it)
                                 }
 
-                                // Cláusulas
+                                // Clauses
                                 val clauses = parsedData?.clauses
                                 if (!clauses.isNullOrEmpty()) {
                                     Spacer(modifier = Modifier.height(14.dp))
-                                    Divider(color = Color(0xFFF0F2F5))
+                                    HorizontalDivider(color = Color(0xFFF0F2F5))
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Text(
                                         text = "Términos y condiciones",
@@ -637,8 +644,7 @@ private fun ContractCard(contract: ContractListResponse) {
                                     }
                                 }
 
-                                // TODO: Botones de aceptar/rechazar contrato
-                                // Implementar aquí si contract.status == "pending"
+                                // TODO: Accept/reject buttons when contract.status == "pending"
                                 // Endpoint: PUT /contracts/{contractId}/accept
                             }
                         }

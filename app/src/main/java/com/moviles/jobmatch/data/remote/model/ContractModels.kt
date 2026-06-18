@@ -26,7 +26,9 @@ data class ContractDetailResponse(
     val contractData: String? = null,
     val createdAt: String,
     val updatedAt: String? = null,
-    val acceptedAt: String? = null
+    val acceptedAt: String? = null,
+    // Populated by ContractRepository after parsing contractData JSON — not from the API
+    val parsedContractData: ContractData? = null
 )
 
 data class ContractData(

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import com.moviles.jobmatch.data.repository.ApiResult
@@ -21,6 +22,10 @@ data class StudentProfileUiState(
     val student: StudentProfileResponse? = null,
     val contracts: List<ContractListResponse> = emptyList(),
     val isLoadingContracts: Boolean = false,
+    val contractDetails: Map<Int, ContractDetailResponse> = emptyMap(),
+    val contractDetailErrors: Map<Int, String> = emptyMap(),
+    val loadingContractIds: Set<Int> = emptySet(),
+    val contractsErrorMessage: String? = null,
     val errorMessage: String? = null
 )
 
@@ -55,7 +60,29 @@ class StudentProfileViewModel(
                 is ApiResult.Success ->
                     _uiState.update { it.copy(isLoadingContracts = false, contracts = result.data) }
                 is ApiResult.Error ->
-                    _uiState.update { it.copy(isLoadingContracts = false) }
+                    _uiState.update { it.copy(isLoadingContracts = false, contractsErrorMessage = result.message) }
+            }
+        }
+    }
+
+    fun loadContractDetail(contractId: Int) {
+        if (_uiState.value.contractDetails.containsKey(contractId) ||
+            _uiState.value.loadingContractIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(loadingContractIds = it.loadingContractIds + contractId) }
+            when (val result = contractRepository.getContractById(contractId)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        contractDetails = it.contractDetails + (contractId to result.data),
+                        loadingContractIds = it.loadingContractIds - contractId
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        contractDetailErrors = it.contractDetailErrors + (contractId to result.message),
+                        loadingContractIds = it.loadingContractIds - contractId
+                    )
+                }
             }
         }
     }
