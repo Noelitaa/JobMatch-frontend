@@ -22,9 +22,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.ui.components.SectionHeader
+import java.util.Calendar
+import java.util.TimeZone
 
 val JobMatchBlue = Color(0xFF2196F3)
 
@@ -38,7 +41,6 @@ fun CreateJobScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Common fields
     var jobType by remember { mutableStateOf("fixed-time") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -56,7 +58,7 @@ fun CreateJobScreen(
     var deliverableInput by remember { mutableStateOf("") }
     var deliverables by remember { mutableStateOf(listOf<String>()) }
 
-    // Skills (common to both types)
+    // Skills (both types)
     var skillInput by remember { mutableStateOf("") }
     var skills by remember { mutableStateOf(listOf<String>()) }
 
@@ -125,19 +127,14 @@ fun CreateJobScreen(
                 }
             }
 
-            if (isAutonomous) {
-                Text(
-                    "El estudiante trabaja de forma independiente dentro de un rango de fechas y entrega resultados concretos.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            } else {
-                Text(
+            Text(
+                text = if (isAutonomous)
+                    "El estudiante trabaja de forma independiente dentro de un rango de fechas y entrega resultados concretos."
+                else
                     "El estudiante trabaja en una fecha y horario específico.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
 
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
@@ -161,7 +158,7 @@ fun CreateJobScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    placeholder = { Text("Describe las tareas y responsabilidades del estudiante...", color = Color.Gray) },
+                    placeholder = { Text("Describe las tareas y responsabilidades...", color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     maxLines = 5,
                     shape = RoundedCornerShape(8.dp)
@@ -217,23 +214,17 @@ fun CreateJobScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedTextField(
+                    DatePickerField(
+                        label = "Fecha inicio",
                         value = startDate,
-                        onValueChange = { startDate = it },
-                        label = { Text("Fecha inicio") },
-                        placeholder = { Text("2026-06-01") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        onDateSelected = { startDate = it },
+                        modifier = Modifier.weight(1f)
                     )
-                    OutlinedTextField(
+                    DatePickerField(
+                        label = "Fecha fin",
                         value = endDate,
-                        onValueChange = { endDate = it },
-                        label = { Text("Fecha fin") },
-                        placeholder = { Text("2026-08-01") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        onDateSelected = { endDate = it },
+                        modifier = Modifier.weight(1f)
                     )
                 }
 
@@ -282,48 +273,35 @@ fun CreateJobScreen(
             } else {
                 SectionHeader(title = "Fecha y Horario")
 
-                OutlinedTextField(
+                DatePickerField(
+                    label = "Fecha del trabajo",
                     value = workDate,
-                    onValueChange = { workDate = it },
-                    label = { Text("Fecha del trabajo") },
-                    placeholder = { Text("2026-06-15") },
-                    leadingIcon = {
-                        Icon(Icons.Outlined.CalendarToday, contentDescription = null,
-                            tint = Color.Gray, modifier = Modifier.size(18.dp))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
+                    onDateSelected = { workDate = it },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedTextField(
+                    TimePickerField(
+                        label = "Hora inicio",
                         value = startTime,
-                        onValueChange = { startTime = it },
-                        label = { Text("Hora inicio") },
-                        placeholder = { Text("08:00") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        onTimeSelected = { startTime = it },
+                        modifier = Modifier.weight(1f)
                     )
-                    OutlinedTextField(
+                    TimePickerField(
+                        label = "Hora fin",
                         value = endTime,
-                        onValueChange = { endTime = it },
-                        label = { Text("Hora fin") },
-                        placeholder = { Text("17:00") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        onTimeSelected = { endTime = it },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-            // --- Requisitos (ambos tipos) ---
+            // --- Habilidades requeridas (ambos tipos) ---
             SectionHeader(title = "Habilidades requeridas")
 
             Row(
@@ -389,8 +367,7 @@ fun CreateJobScreen(
                                 color = Color.Gray, textDecoration = TextDecoration.LineThrough)
                         }
                     }
-                    Text("Promoción Beta",
-                        style = MaterialTheme.typography.labelMedium,
+                    Text("Promoción Beta", style = MaterialTheme.typography.labelMedium,
                         color = JobMatchBlue, fontWeight = FontWeight.SemiBold)
                 }
             }
@@ -458,6 +435,127 @@ fun CreateJobScreen(
                 color = Color.Gray,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerField(
+    label: String,
+    value: String,
+    onDateSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val state = rememberDatePickerState()
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            label = { Text(label) },
+            placeholder = { Text("Selecciona una fecha", color = Color.Gray) },
+            trailingIcon = {
+                Icon(Icons.Outlined.CalendarToday, contentDescription = null, tint = Color.Gray)
+            },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp)
+        )
+        // Overlay that makes the whole field tappable while keeping readOnly
+        Box(modifier = Modifier.matchParentSize().clickable { showDialog = true })
+    }
+
+    if (showDialog) {
+        DatePickerDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { millis ->
+                        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                        cal.timeInMillis = millis
+                        onDateSelected(
+                            "%04d-%02d-%02d".format(
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH) + 1,
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            )
+                        )
+                    }
+                    showDialog = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = state)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimePickerField(
+    label: String,
+    value: String,
+    onTimeSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val state = rememberTimePickerState(is24Hour = true)
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            label = { Text(label) },
+            placeholder = { Text("HH:mm", color = Color.Gray) },
+            trailingIcon = {
+                Icon(Icons.Outlined.Schedule, contentDescription = null, tint = Color.Gray)
+            },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp)
+        )
+        Box(modifier = Modifier.matchParentSize().clickable { showDialog = true })
+    }
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp)
+                    )
+                    TimePicker(state = state)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = {
+                            onTimeSelected(
+                                "%02d:%02d".format(state.hour, state.minute)
+                            )
+                            showDialog = false
+                        }) { Text("Aceptar") }
+                    }
+                }
+            }
         }
     }
 }
