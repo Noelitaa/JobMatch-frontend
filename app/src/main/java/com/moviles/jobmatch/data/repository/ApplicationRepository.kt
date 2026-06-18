@@ -17,17 +17,17 @@ class ApplicationRepository(private val apiService: ApiService) {
                 ApiResult.Success(response.body()!!)
             } else {
                 val message = when (response.code()) {
-                    403 -> "Only students can apply for job offers"
-                    404 -> "Job offer not found"
-                    409 -> "You have already applied to this job"
-                    else -> "Failed to submit application (${response.code()})"
+                    403 -> "Solo los estudiantes pueden aplicar a ofertas de empleo"
+                    404 -> "Oferta de empleo no encontrada"
+                    409 -> "Ya has aplicado a esta oferta de empleo"
+                    else -> "Fallo al subir aplicación (${response.code()})"
                 }
                 ApiResult.Error(message, response.code())
             }
         } catch (e: IOException) {
-            ApiResult.Error("Could not connect to server")
+            ApiResult.Error("No se pudo conectar al servidor")
         } catch (e: Exception) {
-            ApiResult.Error(e.message ?: "Unexpected error")
+            ApiResult.Error(e.message ?: "Error inesperado")
         }
     }
 
