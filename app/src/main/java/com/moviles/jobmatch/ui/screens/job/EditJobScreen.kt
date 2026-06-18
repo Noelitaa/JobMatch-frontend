@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moviles.jobmatch.ui.components.DatePickerField
+import com.moviles.jobmatch.ui.components.TimePickerField
 import com.moviles.jobmatch.ui.theme.DarkBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,33 +208,25 @@ private fun EditJobForm(
             title = "Fecha"
         )
 
-        OutlinedTextField(
+        DatePickerField(
+            label = "Fecha del trabajo",
             value = formState.workDate,
-            onValueChange = onWorkDateChange,
-            label = { Text("Fecha (YYYY-MM-DD)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = RoundedCornerShape(8.dp)
+            onDateSelected = onWorkDateChange,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(
+            TimePickerField(
+                label = "Hora inicio",
                 value = formState.startTime,
-                onValueChange = onStartTimeChange,
-                label = { Text("Hora inicio") },
-                placeholder = { Text("08:00") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                shape = RoundedCornerShape(8.dp)
+                onTimeSelected = onStartTimeChange,
+                modifier = Modifier.weight(1f)
             )
-            OutlinedTextField(
+            TimePickerField(
+                label = "Hora fin",
                 value = formState.endTime,
-                onValueChange = onEndTimeChange,
-                label = { Text("Hora fin") },
-                placeholder = { Text("17:00") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                shape = RoundedCornerShape(8.dp)
+                onTimeSelected = onEndTimeChange,
+                modifier = Modifier.weight(1f)
             )
         }
 
