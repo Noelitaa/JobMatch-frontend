@@ -24,13 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.repository.AppContainer
+import com.moviles.jobmatch.ui.components.JobMatchButton
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
+import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.theme.DarkBlue
 
-// ── Etiquetas de días ──────────────────────────────────────────────────────────
 private val DAY_LABELS = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
 
-// ── Colores ────────────────────────────────────────────────────────────────────
 private val BgColor        = Color(0xFFF5F7FA)
 private val CardWhite      = Color.White
 private val CellSelected   = DarkBlue
@@ -50,7 +50,7 @@ fun AvailabilityScreen(
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) onSaved()
-    }s
+    }
 
     Scaffold(
         topBar = {
@@ -109,35 +109,16 @@ fun AvailabilityScreen(
                     SummarySection(blockActiveDays = state.blockActiveDays)
 
 
-                    Button(
+                    JobMatchButton(
+                        text = "Guardar disponibilidad",
                         onClick = { vm.saveAvailability() },
                         enabled = !state.isSaving,
+                        isLoading = state.isSaving,
+                        leadingIcon = Icons.Default.Check,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
-                    ) {
-                        if (state.isSaving) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Guardar disponibilidad",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp
-                            )
-                        }
-                    }
+                            .height(52.dp)
+                    )
 
                     Spacer(Modifier.height(8.dp))
                 }
@@ -158,8 +139,6 @@ private fun WeeklyScheduleCard(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Cabecera de la tarjeta
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -190,9 +169,7 @@ private fun WeeklyScheduleCard(
 
             Spacer(Modifier.height(14.dp))
 
-            // Cabecera de días
             Row(modifier = Modifier.fillMaxWidth()) {
-                // espacio para la columna de etiquetas de franja
                 Spacer(Modifier.width(56.dp))
                 DAY_LABELS.forEach { day ->
                     Text(
@@ -209,7 +186,6 @@ private fun WeeklyScheduleCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // Filas de franjas
             TimeBlock.entries.forEachIndexed { blockIndex, block ->
                 Row(
                     modifier = Modifier
@@ -217,7 +193,6 @@ private fun WeeklyScheduleCard(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Etiqueta de franja
                     Text(
                         text = block.label,
                         modifier = Modifier.width(56.dp),
@@ -227,7 +202,6 @@ private fun WeeklyScheduleCard(
                         fontSize = 11.sp
                     )
 
-                    // Celdas de días
                     for (dayIndex in 0..6) {
                         val selected = grid.getOrNull(dayIndex)?.getOrNull(blockIndex) ?: false
                         GridCell(
@@ -276,12 +250,7 @@ private fun GridCell(
 @Composable
 private fun SummarySection(blockActiveDays: List<Int>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            "Resumen de franjas",
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            color = TextDark
-        )
+        SectionHeader(title = "Resumen de franjas")
         TimeBlock.entries.forEachIndexed { index, block ->
             SummaryRow(
                 block = block,
