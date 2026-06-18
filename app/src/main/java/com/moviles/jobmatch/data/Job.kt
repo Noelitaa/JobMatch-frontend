@@ -9,8 +9,11 @@ data class Job(
     val status: String = "open",
     val payment: Double,
     val paymentType: String,
-    val workDate: String = "",
-    val startTime: String = "",
-    val endTime: String = "",
-    val deliverables: List<String> = emptyList()
+    val workDate: String? = null,
+    val startTime: String? = null,
+    val endTime: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val deliverables: List<String>? = null,
+    val createdAt: String = ""
 )

@@ -85,7 +85,7 @@ fun JobCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {
-                InfoTag(text = "${job.startTime} - ${job.endTime}", icon = "🕒")
+                InfoTag(text = "${job.startTime ?: ""} - ${job.endTime ?: ""}", icon = "🕒")
                 Spacer(modifier = Modifier.width(8.dp))
                 InfoTag(text = "Cerca de ti", icon = "📍")
             }
