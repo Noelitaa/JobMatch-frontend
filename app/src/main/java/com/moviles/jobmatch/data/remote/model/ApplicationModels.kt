@@ -22,3 +22,7 @@ data class UpdateApplicationResponse(
     val status: String,
     val message: String
 )
+
+data class CreateApplicationRequest(val idJob: Int)
+
+data class CreateApplicationResponse(val message: String, val status: String)
