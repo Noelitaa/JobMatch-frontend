@@ -19,6 +19,8 @@ import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
+import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -76,6 +78,12 @@ interface ApiService {
     suspend fun getStudentProfile(
         @Path("studentId") studentId: String
     ): Response<StudentProfileResponse>
+
+    @GET("contracts/student")
+    suspend fun getStudentContracts(): Response<List<ContractListResponse>>
+
+    @GET("contracts/{contractId}")
+    suspend fun getContractById(@Path("contractId") contractId: Int): Response<ContractDetailResponse>
 
     @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
     suspend fun deleteUser(
