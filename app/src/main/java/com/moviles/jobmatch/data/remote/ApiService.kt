@@ -13,6 +13,8 @@ import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
+import com.moviles.jobmatch.data.remote.model.CreateApplicationRequest
+import com.moviles.jobmatch.data.remote.model.CreateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
@@ -54,6 +56,9 @@ interface ApiService {
         @Path("jobId") jobId: Int,
         @Body request: UpdateJobRequest
     ): Response<JobDetailResponse>
+
+    @POST("applications")
+    suspend fun applyToJob(@Body request: CreateApplicationRequest): Response<CreateApplicationResponse>
 
     @GET("jobs/{jobId}/applications")
     suspend fun getApplicationsByJob(@Path("jobId") jobId: Int): Response<List<ApplicationResponse>>
