@@ -42,7 +42,7 @@ class CreateJobViewModel : ViewModel() {
                 title = title,
                 description = description,
                 payment = payment,
-                paymentType = paymentType,
+                paymentType = paymentType.lowercase(),
                 date = workDate,
                 startTime = startTime,
                 endTime = endTime,
