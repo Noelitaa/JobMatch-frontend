@@ -248,13 +248,27 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
             composable(route = AppDestinations.PROFILE) {
                 StudentProfileScreen(
-                    onEditAvailability = { navController.navigate(AppDestinations.AVAILABILITY) }
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {                    // PR #66
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 
             composable(route = AppDestinations.STUDENT_PROFILE) {
                 StudentProfileScreen(
-                    onEditAvailability = { navController.navigate(AppDestinations.AVAILABILITY) }
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {                    // PR #66
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 

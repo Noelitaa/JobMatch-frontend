@@ -56,7 +56,8 @@ import com.moviles.jobmatch.ui.theme.DarkBlue
 @Composable
 fun StudentProfileScreen(
     onSettingsClick: () -> Unit = {},
-    onEditAvailability: () -> Unit = {}
+    onEditAvailability: () -> Unit = {},   // from this PR
+    onAccountDeleted: () -> Unit = {}      // from PR #66
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(AppContainer.studentRepository)
@@ -166,7 +167,7 @@ fun StudentProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // --- Sobre mí ---
+
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SectionHeader(title = "Sobre mí")
                         Spacer(modifier = Modifier.height(8.dp))

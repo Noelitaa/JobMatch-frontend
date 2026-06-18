@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,17 +27,16 @@ import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 import com.moviles.jobmatch.ui.theme.DarkBlue
 
-
+// ── Etiquetas de días ──────────────────────────────────────────────────────────
 private val DAY_LABELS = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
 
+// ── Colores ────────────────────────────────────────────────────────────────────
 private val BgColor        = Color(0xFFF5F7FA)
 private val CardWhite      = Color.White
 private val CellSelected   = DarkBlue
 private val CellUnselected = Color(0xFFEEF0F3)
-private val HintBlue       = Color(0xFFE8F0FE)
 private val TextMuted      = Color(0xFF9AA5B4)
 private val TextDark       = Color(0xFF1A1A2E)
-private val CompatGreen    = Color(0xFF2ECC71)
 
 @Composable
 fun AvailabilityScreen(
@@ -48,24 +48,18 @@ fun AvailabilityScreen(
     )
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    // Cuando el guardado es exitoso, navega atrás
-    if (state.saveSuccess) {
-        onSaved()
-    }
+    LaunchedEffect(state.saveSuccess) {
+        if (state.saveSuccess) onSaved()
+    }s
 
     Scaffold(
         topBar = {
             JobMatchTopBar(
                 title = "Mi Disponibilidad",
                 showBackButton = true,
-                onBackPressed = onBackPressed,
-                onSettingsPressed = {
-                    // Botón check = guardar
-                    vm.saveAvailability()
-                }
+                onBackPressed = onBackPressed
             )
         },
-
         containerColor = BgColor,
         contentWindowInsets = WindowInsets(0)
     ) { padding ->
@@ -107,12 +101,10 @@ fun AvailabilityScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
 
-
                     WeeklyScheduleCard(
                         grid = state.grid,
                         onToggle = { day, block -> vm.toggleCell(day, block) }
                     )
-
 
                     SummarySection(blockActiveDays = state.blockActiveDays)
 
@@ -217,7 +209,7 @@ private fun WeeklyScheduleCard(
 
             Spacer(Modifier.height(8.dp))
 
-
+            // Filas de franjas
             TimeBlock.entries.forEachIndexed { blockIndex, block ->
                 Row(
                     modifier = Modifier
@@ -225,7 +217,7 @@ private fun WeeklyScheduleCard(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
+                    // Etiqueta de franja
                     Text(
                         text = block.label,
                         modifier = Modifier.width(56.dp),
@@ -235,7 +227,7 @@ private fun WeeklyScheduleCard(
                         fontSize = 11.sp
                     )
 
-
+                    // Celdas de días
                     for (dayIndex in 0..6) {
                         val selected = grid.getOrNull(dayIndex)?.getOrNull(blockIndex) ?: false
                         GridCell(
