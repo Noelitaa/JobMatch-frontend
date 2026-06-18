@@ -1,6 +1,10 @@
 package com.moviles.jobmatch.ui.screens.profile
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
@@ -27,10 +32,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,12 +47,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
+import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
@@ -56,6 +66,7 @@ import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.components.StatCard
 import com.moviles.jobmatch.ui.components.StudentProfileHeader
 import com.moviles.jobmatch.ui.theme.DarkBlue
+import com.moviles.jobmatch.ui.utils.formatApplicationDate
 
 @Composable
 fun StudentProfileScreen(
@@ -63,7 +74,7 @@ fun StudentProfileScreen(
     onAccountDeleted: () -> Unit = {}
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
-        factory = StudentProfileViewModelFactory(AppContainer.studentRepository)
+        factory = StudentProfileViewModelFactory(AppContainer.studentRepository, AppContainer.contractRepository)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -121,6 +132,7 @@ fun StudentProfileScreen(
                 val student = uiState.student
                 val availabilityDays = student?.availability.toSelectedDays()
                 val skills = student?.skills ?: emptyList()
+                val contracts = uiState.contracts
 
                 Column(
                     modifier = Modifier
@@ -271,6 +283,56 @@ fun StudentProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // --- Mis Contratos ---
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        SectionHeader(title = "Mis Contratos")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        when {
+                            uiState.isLoadingContracts -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(64.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = DarkBlue,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                            uiState.contractsErrorMessage != null -> {
+                                Text(
+                                    text = uiState.contractsErrorMessage!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            contracts.isEmpty() -> {
+                                Text(
+                                    text = "Sin contratos registrados",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF9AA5B4)
+                                )
+                            }
+                            else -> {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    contracts.forEach { contract ->
+                                        ContractCard(
+                                            contract = contract,
+                                            detail = uiState.contractDetails[contract.idContract],
+                                            isLoadingDetail = contract.idContract in uiState.loadingContractIds,
+                                            detailError = uiState.contractDetailErrors[contract.idContract],
+                                            onExpand = { viewModel.loadContractDetail(contract.idContract) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // --- Footer ---
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         student?.user?.phone?.let { phone ->
@@ -338,6 +400,301 @@ fun StudentProfileScreen(
                 showDeleteDialog = false
                 deleteViewModel.clearError()
             }
+        )
+    }
+}
+
+@Composable
+private fun ContractCard(
+    contract: ContractListResponse,
+    detail: ContractDetailResponse?,
+    isLoadingDetail: Boolean,
+    detailError: String?,
+    onExpand: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "chevron"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column {
+            // --- Main row (always visible) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        expanded = !expanded
+                        if (expanded) onExpand()
+                    }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = contract.jobTitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1A2332)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = contract.companyName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF5A6A7A)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = formatApplicationDate(contract.createdAt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF9AA5B4)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                ContractStatusBadge(status = contract.status)
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Contraer" else "Expandir",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(chevronRotation),
+                    tint = Color(0xFF9AA5B4)
+                )
+            }
+
+            // --- Expandable section ---
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    HorizontalDivider(color = Color(0xFFF0F2F5), thickness = 1.dp)
+
+                    when {
+                        isLoadingDetail -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = DarkBlue,
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+
+                        detailError != null -> {
+                            Text(
+                                text = detailError,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+
+                        detail != null -> {
+                            val parsedData = detail.parsedContractData
+
+                            Column(modifier = Modifier.padding(16.dp)) {
+
+                                // Header
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Contrato #${detail.idContract}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color(0xFF9AA5B4)
+                                    )
+                                    parsedData?.workType?.let { type ->
+                                        Surface(
+                                            shape = RoundedCornerShape(20.dp),
+                                            color = Color(0xFFEFF3FF)
+                                        ) {
+                                            Text(
+                                                text = when (type.lowercase()) {
+                                                    "fixed-time" -> "Tiempo fijo"
+                                                    "autonomous" -> "Autónomo"
+                                                    else -> type
+                                                },
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = DarkBlue,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                                ContractDetailRow(label = "Creado", value = formatApplicationDate(detail.createdAt))
+                                detail.acceptedAt?.let {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Aceptado", value = formatApplicationDate(it))
+                                }
+
+                                // Contract period
+                                if (parsedData?.startDate != null || parsedData?.endDate != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    val rangeText = when {
+                                        parsedData.startDate != null && parsedData.endDate != null ->
+                                            "${formatApplicationDate(parsedData.startDate)} → ${formatApplicationDate(parsedData.endDate)}"
+                                        parsedData.startDate != null -> "Desde ${formatApplicationDate(parsedData.startDate)}"
+                                        else -> "Hasta ${formatApplicationDate(parsedData.endDate!!)}"
+                                    }
+                                    ContractDetailRow(label = "Vigencia", value = rangeText)
+                                }
+
+                                // Compensation
+                                parsedData?.compensation?.let { comp ->
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Pago", value = comp)
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+                                HorizontalDivider(color = Color(0xFFF0F2F5))
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                // Company
+                                Text(
+                                    text = "Empresa",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DarkBlue
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                ContractDetailRow(label = "Nombre", value = detail.companyName)
+                                parsedData?.companyEmail?.let {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Email", value = it)
+                                }
+                                parsedData?.companyOwnerName?.let {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Contacto", value = it)
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+                                HorizontalDivider(color = Color(0xFFF0F2F5))
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                // Student
+                                Text(
+                                    text = "Estudiante",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DarkBlue
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                ContractDetailRow(label = "Nombre", value = detail.studentName)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                ContractDetailRow(label = "Email", value = detail.studentEmail)
+                                parsedData?.studentUniversity?.let {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Universidad", value = it)
+                                }
+                                parsedData?.studentCareer?.let {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Carrera", value = it)
+                                }
+
+                                // Clauses
+                                val clauses = parsedData?.clauses
+                                if (!clauses.isNullOrEmpty()) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    HorizontalDivider(color = Color(0xFFF0F2F5))
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Text(
+                                        text = "Términos y condiciones",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = DarkBlue
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    clauses.forEachIndexed { index, clause ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 6.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Text(
+                                                text = "${index + 1}.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = DarkBlue,
+                                                fontWeight = FontWeight.SemiBold,
+                                                modifier = Modifier.width(20.dp)
+                                            )
+                                            Text(
+                                                text = clause,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color(0xFF1A2332),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // TODO: Accept/reject buttons when contract.status == "pending"
+                                // Endpoint: PUT /contracts/{contractId}/accept
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContractDetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "$label: ",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF9AA5B4),
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(90.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF1A2332),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ContractStatusBadge(status: String) {
+    val (backgroundColor, textColor, label) = when (status.lowercase()) {
+        "pending" -> Triple(Color(0xFFFFF3E0), Color(0xFFF57C00), "Pendiente")
+        "accepted", "active" -> Triple(Color(0xFFE8F5E9), Color(0xFF388E3C), "Activo")
+        "completed" -> Triple(Color(0xFFE3F2FD), Color(0xFF1565C0), "Completado")
+        "cancelled" -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "Cancelado")
+        else -> Triple(Color(0xFFF5F5F5), Color(0xFF757575), status)
+    }
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = backgroundColor
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            fontSize = 11.sp
         )
     }
 }
