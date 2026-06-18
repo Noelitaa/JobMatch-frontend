@@ -1,6 +1,8 @@
 package com.moviles.jobmatch.ui.screens.company
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,8 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.clickable
 import com.moviles.jobmatch.ui.components.SectionHeader
+
 val JobMatchBlue = Color(0xFF2196F3)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,18 +38,32 @@ fun CreateJobScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Common fields
+    var jobType by remember { mutableStateOf("fixed-time") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var payment by remember { mutableStateOf("") }
     var paymentType by remember { mutableStateOf("Hora") }
+
+    // Fixed-time fields
     var workDate by remember { mutableStateOf("") }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
+
+    // Autonomous fields
+    var startDate by remember { mutableStateOf("") }
+    var endDate by remember { mutableStateOf("") }
+    var deliverableInput by remember { mutableStateOf("") }
+    var deliverables by remember { mutableStateOf(listOf<String>()) }
+
+    // Skills (common to both types)
     var skillInput by remember { mutableStateOf("") }
     var skills by remember { mutableStateOf(listOf<String>()) }
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val paymentTypes = listOf("Hora", "Turno", "Proyecto")
+    val isAutonomous = jobType == "autonomous"
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -86,7 +102,46 @@ fun CreateJobScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // Sección Información Básica
+            // --- Tipo de trabajo ---
+            SectionHeader(title = "Tipo de trabajo")
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("fixed-time" to "Trabajo Fijo", "autonomous" to "Autónomo").forEach { (value, label) ->
+                    val selected = jobType == value
+                    OutlinedButton(
+                        onClick = { jobType = value },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (selected) Color.White else Color.Transparent,
+                            contentColor = if (selected) JobMatchBlue else Color.Gray
+                        ),
+                        border = BorderStroke(
+                            width = if (selected) 2.dp else 1.dp,
+                            color = if (selected) JobMatchBlue else Color.LightGray
+                        )
+                    ) {
+                        Text(label, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+                    }
+                }
+            }
+
+            if (isAutonomous) {
+                Text(
+                    "El estudiante trabaja de forma independiente dentro de un rango de fechas y entrega resultados concretos.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            } else {
+                Text(
+                    "El estudiante trabaja en una fecha y horario específico.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+
+            // --- Información Básica ---
             SectionHeader(title = "Información Básica")
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -95,8 +150,7 @@ fun CreateJobScreen(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    placeholder = { Text("Ej. Auxiliar de Eventos, Repartidor...",
-                        color = Color.Gray) },
+                    placeholder = { Text("Ej. Auxiliar de Eventos, Repartidor...", color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(8.dp)
@@ -107,20 +161,18 @@ fun CreateJobScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    placeholder = { Text("Describe las tareas y responsabilidades del estudiante...",
-                        color = Color.Gray) },
+                    placeholder = { Text("Describe las tareas y responsabilidades del estudiante...", color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     maxLines = 5,
                     shape = RoundedCornerShape(8.dp)
                 )
             }
 
-            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-            // Sección Pago y Modalidad
+            // --- Pago y Modalidad ---
             SectionHeader(title = "Pago y Modalidad")
 
-            // Selector de tipo de pago
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 paymentTypes.forEach { type ->
                     val selected = paymentType == type
@@ -131,7 +183,7 @@ fun CreateJobScreen(
                             containerColor = if (selected) Color.White else Color.Transparent,
                             contentColor = if (selected) JobMatchBlue else Color.Gray
                         ),
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             width = if (selected) 2.dp else 1.dp,
                             color = if (selected) JobMatchBlue else Color.LightGray
                         )
@@ -153,86 +205,126 @@ fun CreateJobScreen(
                     prefix = { Text("₡ ", fontWeight = FontWeight.Medium) },
                     shape = RoundedCornerShape(8.dp)
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Info, contentDescription = null,
-                        modifier = Modifier.size(14.dp), tint = Color.Gray)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("El pago promedio para este tipo es de ₡3,500/hora.",
-                        style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                }
             }
 
-            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-            // Sección Fecha y Ubicación
-            SectionHeader(title = "Fecha")
+            // --- Fecha / Horario (condicional por tipo) ---
+            if (isAutonomous) {
+                SectionHeader(title = "Vigencia del contrato")
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Duración", style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     OutlinedTextField(
-                        value = workDate,
-                        onValueChange = { workDate = it },
-                        placeholder = { Text("Ej. 2026-06-15", color = Color.Gray) },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.Schedule, contentDescription = null,
-                                tint = Color.Gray, modifier = Modifier.size(18.dp))
+                        value = startDate,
+                        onValueChange = { startDate = it },
+                        label = { Text("Fecha inicio") },
+                        placeholder = { Text("2026-06-01") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = endDate,
+                        onValueChange = { endDate = it },
+                        label = { Text("Fecha fin") },
+                        placeholder = { Text("2026-08-01") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+
+                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+
+                SectionHeader(title = "Entregables")
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = deliverableInput,
+                        onValueChange = { deliverableInput = it },
+                        placeholder = { Text("Ej. Informe final, diseño de logo...", color = Color.Gray) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    Button(
+                        onClick = {
+                            if (deliverableInput.isNotBlank()) {
+                                deliverables = deliverables + deliverableInput.trim()
+                                deliverableInput = ""
+                            }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = JobMatchBlue),
+                        contentPadding = PaddingValues(12.dp),
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White,
+                            modifier = Modifier.size(20.dp))
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    deliverables.forEachIndexed { index, item ->
+                        ChipItem(text = item, onRemove = {
+                            deliverables = deliverables.toMutableList().also { it.removeAt(index) }
+                        })
+                    }
+                }
+
+            } else {
+                SectionHeader(title = "Fecha y Horario")
+
+                OutlinedTextField(
+                    value = workDate,
+                    onValueChange = { workDate = it },
+                    label = { Text("Fecha del trabajo") },
+                    placeholder = { Text("2026-06-15") },
+                    leadingIcon = {
+                        Icon(Icons.Outlined.CalendarToday, contentDescription = null,
+                            tint = Color.Gray, modifier = Modifier.size(18.dp))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = startTime,
+                        onValueChange = { startTime = it },
+                        label = { Text("Hora inicio") },
+                        placeholder = { Text("08:00") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = endTime,
+                        onValueChange = { endTime = it },
+                        label = { Text("Hora fin") },
+                        placeholder = { Text("17:00") },
+                        modifier = Modifier.weight(1f),
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp)
                     )
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Horarios Disponibles", style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = if (startTime.isNotBlank() && endTime.isNotBlank())
-                        "Lunes a Viernes, $startTime - $endTime"
-                    else "",
-                    onValueChange = {},
-                    placeholder = { Text("Lunes a Viernes, 8:00 AM - 12:00 PM", color = Color.Gray) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp),
-                    readOnly = true
-                )
-            }
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = startTime,
-                    onValueChange = { startTime = it },
-                    label = { Text("Hora inicio") },
-                    placeholder = { Text("08:00") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                OutlinedTextField(
-                    value = endTime,
-                    onValueChange = { endTime = it },
-                    label = { Text("Hora fin") },
-                    placeholder = { Text("17:00") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
-                )
-            }
-
-            Divider(color = Color.LightGray.copy(alpha = 0.5f))
-
-            // Sección Requisitos
-            SectionHeader(title = "Requisitos específicos")
+            // --- Requisitos (ambos tipos) ---
+            SectionHeader(title = "Habilidades requeridas")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -242,7 +334,7 @@ fun CreateJobScreen(
                 OutlinedTextField(
                     value = skillInput,
                     onValueChange = { skillInput = it },
-                    placeholder = { Text("Añadir requisito...", color = Color.Gray) },
+                    placeholder = { Text("Ej. Excel, Atención al cliente...", color = Color.Gray) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     shape = RoundedCornerShape(8.dp)
@@ -259,43 +351,22 @@ fun CreateJobScreen(
                     contentPadding = PaddingValues(12.dp),
                     modifier = Modifier.size(52.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar",
-                        tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White,
+                        modifier = Modifier.size(20.dp))
                 }
             }
 
-            // Chips de requisitos
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 skills.forEachIndexed { index, skill ->
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color.White,
-                        modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(skill, style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Eliminar",
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable {
-                                        skills = skills.toMutableList().also { it.removeAt(index) }
-                                    },
-                                tint = Color.Gray
-                            )
-                        }
-                    }
+                    ChipItem(text = skill, onRemove = {
+                        skills = skills.toMutableList().also { it.removeAt(index) }
+                    })
                 }
             }
 
-            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-            // Costo total
+            // --- Costo total ---
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFFE3F2FD),
@@ -315,8 +386,7 @@ fun CreateJobScreen(
                             Text("Gratis", style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold, color = Color.Black)
                             Text("₡5,000", style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
-                                textDecoration = TextDecoration.LineThrough)
+                                color = Color.Gray, textDecoration = TextDecoration.LineThrough)
                         }
                     }
                     Text("Promoción Beta",
@@ -330,28 +400,43 @@ fun CreateJobScreen(
                     style = MaterialTheme.typography.bodySmall)
             }
 
-            // Botón publicar
+            // --- Botón publicar ---
             Button(
                 onClick = {
                     errorMessage = null
+                    val amount = payment.toDoubleOrNull()
                     when {
                         title.isBlank() -> errorMessage = "El título es requerido"
                         description.isBlank() -> errorMessage = "La descripción es requerida"
-                        workDate.isBlank() -> errorMessage = "La fecha es requerida"
-                        startTime.isBlank() -> errorMessage = "La hora de inicio es requerida"
-                        endTime.isBlank() -> errorMessage = "La hora de fin es requerida"
-                        payment.isBlank() -> errorMessage = "El monto es requerido"
-                        else -> viewModel.createJob(
-                            companyId = companyId,
-                            title = title,
-                            description = description,
-                            payment = payment.toDoubleOrNull() ?: 0.0,
-                            paymentType = paymentType,
-                            workDate = workDate,
-                            startTime = "$startTime:00",
-                            endTime = "$endTime:00",
-                            skills = skills
-                        )
+                        amount == null || amount <= 0 -> errorMessage = "Ingresa un monto válido"
+                        isAutonomous && startDate.isBlank() -> errorMessage = "La fecha de inicio es requerida"
+                        isAutonomous && endDate.isBlank() -> errorMessage = "La fecha de fin es requerida"
+                        !isAutonomous && workDate.isBlank() -> errorMessage = "La fecha es requerida"
+                        !isAutonomous && startTime.isBlank() -> errorMessage = "La hora de inicio es requerida"
+                        !isAutonomous && endTime.isBlank() -> errorMessage = "La hora de fin es requerida"
+                        else -> if (isAutonomous) {
+                            viewModel.createAutonomousJob(
+                                title = title,
+                                description = description,
+                                payment = amount!!,
+                                paymentType = paymentType,
+                                startDate = startDate,
+                                endDate = endDate,
+                                deliverables = deliverables,
+                                skillsRequired = skills
+                            )
+                        } else {
+                            viewModel.createFixedTimeJob(
+                                title = title,
+                                description = description,
+                                payment = amount!!,
+                                paymentType = paymentType,
+                                workDate = workDate,
+                                startTime = "$startTime:00",
+                                endTime = "$endTime:00",
+                                skillsRequired = skills
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -360,8 +445,7 @@ fun CreateJobScreen(
                 enabled = uiState !is CreateJobUiState.Loading
             ) {
                 if (uiState is CreateJobUiState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp),
-                        color = Color.White)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                 } else {
                     Text("Publicar Vacante", fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp, color = Color.White)
@@ -378,3 +462,25 @@ fun CreateJobScreen(
     }
 }
 
+@Composable
+private fun ChipItem(text: String, onRemove: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                Icons.Default.Close,
+                contentDescription = "Eliminar",
+                modifier = Modifier.size(16.dp).clickable { onRemove() },
+                tint = Color.Gray
+            )
+        }
+    }
+}

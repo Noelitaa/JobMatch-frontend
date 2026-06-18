@@ -23,8 +23,7 @@ class CreateJobViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<CreateJobUiState>(CreateJobUiState.Idle)
     val uiState: StateFlow<CreateJobUiState> = _uiState
 
-    fun createJob(
-        companyId: String,
+    fun createFixedTimeJob(
         title: String,
         description: String,
         payment: Double,
@@ -32,27 +31,56 @@ class CreateJobViewModel : ViewModel() {
         workDate: String,
         startTime: String,
         endTime: String,
-        skills: List<String>
+        skillsRequired: List<String>
     ) {
         viewModelScope.launch {
             _uiState.value = CreateJobUiState.Loading
-
             val request = CreateJobRequest(
-                companyId = companyId,
                 title = title,
                 description = description,
+                type = "fixed-time",
                 payment = payment,
                 paymentType = paymentType.lowercase(),
                 date = workDate,
                 startTime = startTime,
                 endTime = endTime,
-                deliverables = skills
+                skillsRequired = skillsRequired.ifEmpty { null }
             )
+            submit(request)
+        }
+    }
 
-            when (val result = jobRepository.createJob(request)) {
-                is ApiResult.Success<*> -> _uiState.value = CreateJobUiState.Success
-                is ApiResult.Error -> _uiState.value = CreateJobUiState.Error(result.message)
-            }
+    fun createAutonomousJob(
+        title: String,
+        description: String,
+        payment: Double,
+        paymentType: String,
+        startDate: String,
+        endDate: String,
+        deliverables: List<String>,
+        skillsRequired: List<String>
+    ) {
+        viewModelScope.launch {
+            _uiState.value = CreateJobUiState.Loading
+            val request = CreateJobRequest(
+                title = title,
+                description = description,
+                type = "autonomous",
+                payment = payment,
+                paymentType = paymentType.lowercase(),
+                startDate = startDate,
+                endDate = endDate,
+                deliverables = deliverables.ifEmpty { null },
+                skillsRequired = skillsRequired.ifEmpty { null }
+            )
+            submit(request)
+        }
+    }
+
+    private suspend fun submit(request: CreateJobRequest) {
+        when (val result = jobRepository.createJob(request)) {
+            is ApiResult.Success<*> -> _uiState.value = CreateJobUiState.Success
+            is ApiResult.Error -> _uiState.value = CreateJobUiState.Error(result.message)
         }
     }
 
