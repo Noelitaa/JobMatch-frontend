@@ -31,12 +31,16 @@ data class ContractDetailResponse(
 
 data class ContractData(
     val jobTitle: String? = null,
-    val jobType: String? = null,
+    val workType: String? = null,
     val companyName: String? = null,
     val companyEmail: String? = null,
     val companyOwnerName: String? = null,
     val studentName: String? = null,
     val studentEmail: String? = null,
     val studentUniversity: String? = null,
-    val studentCareer: String? = null
+    val studentCareer: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val compensation: String? = null,
+    val clauses: List<String>? = null
 )

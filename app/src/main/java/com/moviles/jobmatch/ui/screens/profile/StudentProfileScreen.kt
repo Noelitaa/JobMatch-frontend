@@ -498,7 +498,7 @@ private fun ContractCard(contract: ContractListResponse) {
 
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                // Encabezado del contrato
+                                // Encabezado
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -509,13 +509,17 @@ private fun ContractCard(contract: ContractListResponse) {
                                         style = MaterialTheme.typography.labelMedium,
                                         color = Color(0xFF9AA5B4)
                                     )
-                                    parsedData?.jobType?.let { type ->
+                                    parsedData?.workType?.let { type ->
                                         Surface(
                                             shape = RoundedCornerShape(20.dp),
                                             color = Color(0xFFEFF3FF)
                                         ) {
                                             Text(
-                                                text = if (type == "fixed-time") "Tiempo fijo" else "Autónomo",
+                                                text = when (type.lowercase()) {
+                                                    "fixed-time" -> "Tiempo fijo"
+                                                    "autonomous" -> "Autónomo"
+                                                    else -> type
+                                                },
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = DarkBlue,
@@ -526,12 +530,28 @@ private fun ContractCard(contract: ContractListResponse) {
                                 }
 
                                 Spacer(modifier = Modifier.height(12.dp))
-
-                                // Fechas
                                 ContractDetailRow(label = "Creado", value = formatApplicationDate(detail!!.createdAt))
                                 detail!!.acceptedAt?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Aceptado", value = formatApplicationDate(it))
+                                }
+
+                                // Vigencia del contrato
+                                if (parsedData?.startDate != null || parsedData?.endDate != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    val rangeText = when {
+                                        parsedData.startDate != null && parsedData.endDate != null ->
+                                            "${formatApplicationDate(parsedData.startDate)} → ${formatApplicationDate(parsedData.endDate)}"
+                                        parsedData.startDate != null -> "Desde ${formatApplicationDate(parsedData.startDate)}"
+                                        else -> "Hasta ${formatApplicationDate(parsedData.endDate!!)}"
+                                    }
+                                    ContractDetailRow(label = "Vigencia", value = rangeText)
+                                }
+
+                                // Compensación
+                                parsedData?.compensation?.let { comp ->
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    ContractDetailRow(label = "Pago", value = comp)
                                 }
 
                                 Spacer(modifier = Modifier.height(14.dp))
@@ -547,13 +567,13 @@ private fun ContractCard(contract: ContractListResponse) {
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 ContractDetailRow(label = "Nombre", value = detail!!.companyName)
-                                parsedData?.companyEmail?.let { email ->
+                                parsedData?.companyEmail?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    ContractDetailRow(label = "Email", value = email)
+                                    ContractDetailRow(label = "Email", value = it)
                                 }
-                                parsedData?.companyOwnerName?.let { owner ->
+                                parsedData?.companyOwnerName?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    ContractDetailRow(label = "Contacto", value = owner)
+                                    ContractDetailRow(label = "Contacto", value = it)
                                 }
 
                                 Spacer(modifier = Modifier.height(14.dp))
@@ -571,13 +591,50 @@ private fun ContractCard(contract: ContractListResponse) {
                                 ContractDetailRow(label = "Nombre", value = detail!!.studentName)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 ContractDetailRow(label = "Email", value = detail!!.studentEmail)
-                                parsedData?.studentUniversity?.let { uni ->
+                                parsedData?.studentUniversity?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    ContractDetailRow(label = "Universidad", value = uni)
+                                    ContractDetailRow(label = "Universidad", value = it)
                                 }
-                                parsedData?.studentCareer?.let { career ->
+                                parsedData?.studentCareer?.let {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    ContractDetailRow(label = "Carrera", value = career)
+                                    ContractDetailRow(label = "Carrera", value = it)
+                                }
+
+                                // Cláusulas
+                                val clauses = parsedData?.clauses
+                                if (!clauses.isNullOrEmpty()) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Divider(color = Color(0xFFF0F2F5))
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Text(
+                                        text = "Términos y condiciones",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = DarkBlue
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    clauses.forEachIndexed { index, clause ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 6.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Text(
+                                                text = "${index + 1}.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = DarkBlue,
+                                                fontWeight = FontWeight.SemiBold,
+                                                modifier = Modifier.width(20.dp)
+                                            )
+                                            Text(
+                                                text = clause,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color(0xFF1A2332),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
                                 }
 
                                 // TODO: Botones de aceptar/rechazar contrato
