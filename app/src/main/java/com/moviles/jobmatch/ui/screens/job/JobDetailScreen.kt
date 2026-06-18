@@ -47,12 +47,29 @@ fun JobDetailScreen(
     viewModel: JobDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val applyState by viewModel.applyState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(jobId, refreshKey) {
         viewModel.loadJobDetail(jobId)
     }
 
+    LaunchedEffect(applyState) {
+        when (val state = applyState) {
+            is ApplyState.Success -> {
+                snackbarHostState.showSnackbar("Application submitted successfully!")
+                viewModel.resetApplyState()
+            }
+            is ApplyState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetApplyState()
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -90,7 +107,10 @@ fun JobDetailScreen(
                         onEdit = { onEditJob(job.idJob) }
                     )
                 } else {
-                    JobDetailBottomBar()
+                    JobDetailBottomBar(
+                        isApplying = applyState is ApplyState.Loading,
+                        onApply = { viewModel.applyToJob(job.idJob) }
+                    )
                 }
             }
         },
@@ -805,7 +825,10 @@ private fun TrustCard() {
 }
 
 @Composable
-private fun JobDetailBottomBar() {
+private fun JobDetailBottomBar(
+    isApplying: Boolean = false,
+    onApply: () -> Unit = {}
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
@@ -833,24 +856,33 @@ private fun JobDetailBottomBar() {
             }
 
             Button(
-                onClick = {},
+                onClick = onApply,
+                enabled = !isApplying,
                 modifier = Modifier
                     .weight(1f)
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
             ) {
-                Text(
-                    text = "Postularse Ahora",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                if (isApplying) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Postularse Ahora",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

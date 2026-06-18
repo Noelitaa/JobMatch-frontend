@@ -1,5 +1,6 @@
 package com.moviles.jobmatch.ui.screens.company
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,11 +12,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.Company
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.*
+import com.moviles.jobmatch.ui.screens.profile.DeleteAccountViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,12 +30,25 @@ fun CompanyProfileScreen(
     companyId: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    onAccountDeleted: () -> Unit = {},
     viewModel: CompanyProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val deleteViewModel: DeleteAccountViewModel = viewModel(
+        factory = DeleteAccountViewModel.Factory(AppContainer.userRepository)
+    )
+    val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
+
+    val isOwnProfile = companyId == AuthSession.currentUser?.userId
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(companyId) {
         viewModel.loadCompanyProfile(companyId)
+    }
+
+    LaunchedEffect(deleteUiState.isDeleted) {
+        if (deleteUiState.isDeleted) onAccountDeleted()
     }
 
     Scaffold(
@@ -55,6 +74,8 @@ fun CompanyProfileScreen(
                 val company = (uiState as CompanyUiState.Success).company
                 CompanyProfileContent(
                     company = company,
+                    isOwnProfile = isOwnProfile,
+                    onDeleteClick = { showDeleteDialog = true },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -78,12 +99,28 @@ fun CompanyProfileScreen(
             }
         }
     }
+
+    if (showDeleteDialog) {
+        DeleteAccountDialog(
+            isLoading = deleteUiState.isLoading,
+            errorMessage = deleteUiState.errorMessage,
+            onConfirm = { password ->
+                deleteViewModel.deleteAccount(password)
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                deleteViewModel.clearError()
+            }
+        )
+    }
 }
 
 @Composable
 fun CompanyProfileContent(
     company: Company,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isOwnProfile: Boolean = false,
+    onDeleteClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -136,7 +173,27 @@ fun CompanyProfileContent(
             )
         }
 
+        if (isOwnProfile) {
+            OutlinedButton(
+                onClick = onDeleteClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFFE53935)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE53935))
+            ) {
+                Text(
+                    text = "Eliminar cuenta",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
 
