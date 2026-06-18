@@ -38,3 +38,7 @@ data class RegisterResponse(
     val userId: String,
     val message: String
 )
+
+data class DeleteUserRequest(
+    val password: String
+)

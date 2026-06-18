@@ -33,7 +33,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
+import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 import com.moviles.jobmatch.ui.components.SectionHeader
@@ -54,12 +59,24 @@ import com.moviles.jobmatch.ui.theme.DarkBlue
 
 @Composable
 fun StudentProfileScreen(
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onAccountDeleted: () -> Unit = {}
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(AppContainer.studentRepository)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val deleteViewModel: DeleteAccountViewModel = viewModel(
+        factory = DeleteAccountViewModel.Factory(AppContainer.userRepository)
+    )
+    val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(deleteUiState.isDeleted) {
+        if (deleteUiState.isDeleted) onAccountDeleted()
+    }
 
     Scaffold(
         topBar = {
@@ -284,12 +301,44 @@ fun StudentProfileScreen(
                                 fontWeight = FontWeight.Medium
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFFE53935)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE53935))
+                        ) {
+                            Text(
+                                text = "Eliminar cuenta",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteAccountDialog(
+            isLoading = deleteUiState.isLoading,
+            errorMessage = deleteUiState.errorMessage,
+            onConfirm = { password ->
+                deleteViewModel.deleteAccount(password)
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                deleteViewModel.clearError()
+            }
+        )
     }
 }
 
