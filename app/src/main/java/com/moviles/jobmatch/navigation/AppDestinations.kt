@@ -18,6 +18,22 @@ object AppDestinations {
     const val ALERTS = "alertas"
     const val PROFILE = "perfil"
     const val STUDENT_PROFILE = "student_profile"
+    const val STUDENT_PUBLIC_PROFILE = "student_public_profile"
+    const val APPLICATION_DETAIL = "application_detail"
+
+    fun applicationDetailRoute(
+        applicationId: Int,
+        jobId: Int,
+        jobTitle: String,
+        studentId: String,
+        studentName: String,
+        studentEmail: String,
+        status: String,
+        createdAt: String
+    ): String = "$APPLICATION_DETAIL/$applicationId/$jobId/${Uri.encode(jobTitle)}/${Uri.encode(studentId)}/${Uri.encode(studentName)}/${Uri.encode(studentEmail)}/${Uri.encode(status)}/${Uri.encode(createdAt)}"
+
+    fun studentPublicProfileRoute(studentId: String): String =
+        "$STUDENT_PUBLIC_PROFILE/${Uri.encode(studentId)}"
 
     fun companyProfileRoute(companyId: String): String {
         return "$COMPANY_PROFILE/${Uri.encode(companyId)}"

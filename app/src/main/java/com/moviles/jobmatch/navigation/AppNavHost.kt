@@ -24,8 +24,10 @@ import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyJobsScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
 import com.moviles.jobmatch.ui.screens.company.CreateJobScreen
+import com.moviles.jobmatch.ui.screens.job.ApplicationDetailScreen
 import com.moviles.jobmatch.ui.screens.job.ApplicationsScreen
 import com.moviles.jobmatch.ui.screens.job.EditJobScreen
+import com.moviles.jobmatch.ui.screens.profile.StudentPublicProfileScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
@@ -50,7 +52,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             currentRoute != AppDestinations.REGISTER &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
             currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
-            currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true
+            currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
+            currentRoute?.startsWith(AppDestinations.STUDENT_PUBLIC_PROFILE) != true &&
+            currentRoute?.startsWith(AppDestinations.APPLICATION_DETAIL) != true
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -250,6 +254,63 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 ApplicationsScreen(
                     jobId = jobId,
                     jobTitle = jobTitle,
+                    onBackPressed = { navController.popBackStack() },
+                    onStudentClick = { studentId ->
+                        navController.navigate(AppDestinations.studentPublicProfileRoute(studentId))
+                    },
+                    onViewApplicationDetail = { application, jId ->
+                        navController.navigate(
+                            AppDestinations.applicationDetailRoute(
+                                applicationId = application.idApplication,
+                                jobId = jId,
+                                jobTitle = application.jobTitle,
+                                studentId = application.idStudent,
+                                studentName = application.studentName,
+                                studentEmail = application.studentEmail,
+                                status = application.status,
+                                createdAt = application.createdAt
+                            )
+                        )
+                    }
+                )
+            }
+            composable(
+                route = "${AppDestinations.APPLICATION_DETAIL}/{applicationId}/{jobId}/{jobTitle}/{studentId}/{studentName}/{studentEmail}/{status}/{createdAt}",
+                arguments = listOf(
+                    navArgument("applicationId") { type = NavType.IntType },
+                    navArgument("jobId") { type = NavType.IntType },
+                    navArgument("jobTitle") { type = NavType.StringType },
+                    navArgument("studentId") { type = NavType.StringType },
+                    navArgument("studentName") { type = NavType.StringType },
+                    navArgument("studentEmail") { type = NavType.StringType },
+                    navArgument("status") { type = NavType.StringType },
+                    navArgument("createdAt") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val args = backStackEntry.arguments ?: return@composable
+                ApplicationDetailScreen(
+                    applicationId = args.getInt("applicationId"),
+                    jobId = args.getInt("jobId"),
+                    jobTitle = args.getString("jobTitle").orEmpty(),
+                    studentId = args.getString("studentId").orEmpty(),
+                    studentName = args.getString("studentName").orEmpty(),
+                    studentEmail = args.getString("studentEmail").orEmpty(),
+                    status = args.getString("status").orEmpty(),
+                    createdAt = args.getString("createdAt").orEmpty(),
+                    onBackPressed = { navController.popBackStack() },
+                    onViewStudentProfile = { studentId ->
+                        navController.navigate(AppDestinations.studentPublicProfileRoute(studentId))
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.STUDENT_PUBLIC_PROFILE}/{studentId}",
+                arguments = listOf(navArgument("studentId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val studentId = backStackEntry.arguments?.getString("studentId").orEmpty()
+                StudentPublicProfileScreen(
+                    studentId = studentId,
                     onBackPressed = { navController.popBackStack() }
                 )
             }
