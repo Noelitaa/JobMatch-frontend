@@ -64,6 +64,7 @@ import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
 import com.moviles.jobmatch.ui.components.RatingDialog
+import com.moviles.jobmatch.ui.components.ReceivedRatingsSection
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 import com.moviles.jobmatch.ui.components.LogoutConfirmationDialog
 import com.moviles.jobmatch.ui.components.SectionHeader
@@ -393,6 +394,17 @@ fun StudentProfileScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                     }
+
+                    // --- Calificaciones recibidas ---
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        ReceivedRatingsSection(
+                            isLoading = uiState.isLoadingRatings,
+                            error = uiState.ratingsError,
+                            ratings = uiState.receivedRatings
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // --- Footer ---
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
