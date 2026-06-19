@@ -34,4 +34,8 @@ object AppContainer {
     val paymentRepository: PaymentRepository by lazy {
         PaymentRepository(RetrofitClient.apiService)
     }
+
+    val ratingRepository: RatingRepository by lazy {
+        RatingRepository(RetrofitClient.apiService)
+    }
 }

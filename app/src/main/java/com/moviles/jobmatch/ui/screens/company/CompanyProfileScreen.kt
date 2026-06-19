@@ -28,6 +28,7 @@ import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.*
+import com.moviles.jobmatch.ui.components.RatingDialog
 import com.moviles.jobmatch.ui.screens.profile.DeleteAccountViewModel
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import com.moviles.jobmatch.ui.utils.formatApplicationDate
@@ -51,6 +52,7 @@ fun CompanyProfileScreen(
 
     val isOwnProfile = companyId == AuthSession.currentUser?.userId
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var ratingContractId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(companyId) {
         viewModel.loadCompanyProfile(companyId)
@@ -105,6 +107,7 @@ fun CompanyProfileScreen(
                     onDeleteClick = { showDeleteDialog = true },
                     onExpandContract = { viewModel.loadContractDetail(it) },
                     onMakePayment = onMakePayment,
+                    onRate = { ratingContractId = it },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -124,6 +127,28 @@ fun CompanyProfileScreen(
             }
         )
     }
+
+    val activeRatingId = ratingContractId
+    if (activeRatingId != null) {
+        LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
+            if (activeRatingId in uiState.ratingSuccessIds) {
+                ratingContractId = null
+            }
+        }
+        RatingDialog(
+            title = "Calificar al estudiante",
+            description = "¿Cómo fue la participación del estudiante?",
+            isLoading = activeRatingId in uiState.ratingLoadingIds,
+            errorMessage = uiState.ratingErrors[activeRatingId],
+            onConfirm = { stars, comment ->
+                viewModel.submitRating(activeRatingId, stars, comment)
+            },
+            onDismiss = {
+                ratingContractId = null
+                viewModel.clearRatingError(activeRatingId)
+            }
+        )
+    }
 }
 
 @Composable
@@ -134,7 +159,8 @@ fun CompanyProfileContent(
     isOwnProfile: Boolean = false,
     onDeleteClick: () -> Unit = {},
     onExpandContract: (Int) -> Unit = {},
-    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> }
+    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
+    onRate: (Int) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -237,6 +263,73 @@ fun CompanyProfileContent(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+
+            val activeContracts = uiState.contracts.filter { it.status.equals("active", ignoreCase = true) }
+            if (activeContracts.isNotEmpty()) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    SectionHeader(title = "Calificaciones")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            activeContracts.forEachIndexed { index, contract ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = contract.jobTitle,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF1A1A1A)
+                                        )
+                                        Text(
+                                            text = contract.studentName,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF5A6A7A)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (contract.idContract in uiState.ratingSuccessIds) {
+                                        Text(
+                                            text = "Ya calificado",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF2E7D32),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    } else {
+                                        Surface(
+                                            shape = RoundedCornerShape(20.dp),
+                                            color = Color(0xFFFFC107),
+                                            modifier = Modifier.clickable { onRate(contract.idContract) }
+                                        ) {
+                                            Text(
+                                                text = "Calificar",
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF1A1A1A),
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                if (index < activeContracts.lastIndex) {
+                                    HorizontalDivider(color = Color(0xFFF0F0F0))
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         if (isOwnProfile) {

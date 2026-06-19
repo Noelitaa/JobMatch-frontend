@@ -63,6 +63,7 @@ import com.moviles.jobmatch.navigation.AppDestinations
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
+import com.moviles.jobmatch.ui.components.RatingDialog
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.components.SkillChip
@@ -78,7 +79,11 @@ fun StudentProfileScreen(
     onAccountDeleted: () -> Unit = {}      // from PR #66
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
-        factory = StudentProfileViewModelFactory(AppContainer.studentRepository, AppContainer.contractRepository)
+        factory = StudentProfileViewModelFactory(
+            AppContainer.studentRepository,
+            AppContainer.contractRepository,
+            AppContainer.ratingRepository
+        )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -88,6 +93,7 @@ fun StudentProfileScreen(
     val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var ratingContractId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(deleteUiState.isDeleted) {
         if (deleteUiState.isDeleted) onAccountDeleted()
@@ -329,8 +335,10 @@ fun StudentProfileScreen(
                                             detailError = uiState.contractDetailErrors[contract.idContract],
                                             isAccepting = contract.idContract in uiState.acceptingContractIds,
                                             acceptError = uiState.contractAcceptErrors[contract.idContract],
+                                            isRatingSuccess = contract.idContract in uiState.ratingSuccessIds,
                                             onExpand = { viewModel.loadContractDetail(contract.idContract) },
-                                            onAccept = { viewModel.acceptContract(contract.idContract) }
+                                            onAccept = { viewModel.acceptContract(contract.idContract) },
+                                            onRate = { ratingContractId = contract.idContract }
                                         )
                                     }
                                 }
@@ -409,6 +417,26 @@ fun StudentProfileScreen(
             }
         )
     }
+
+    val activeRatingId = ratingContractId
+    if (activeRatingId != null) {
+        LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
+            if (activeRatingId in uiState.ratingSuccessIds) {
+                ratingContractId = null
+            }
+        }
+        RatingDialog(
+            isLoading = activeRatingId in uiState.ratingLoadingIds,
+            errorMessage = uiState.ratingErrors[activeRatingId],
+            onConfirm = { stars, comment ->
+                viewModel.submitRating(activeRatingId, stars, comment)
+            },
+            onDismiss = {
+                ratingContractId = null
+                viewModel.clearRatingError(activeRatingId)
+            }
+        )
+    }
 }
 
 @Composable
@@ -419,8 +447,10 @@ private fun ContractCard(
     detailError: String?,
     isAccepting: Boolean,
     acceptError: String?,
+    isRatingSuccess: Boolean,
     onExpand: () -> Unit,
-    onAccept: () -> Unit
+    onAccept: () -> Unit,
+    onRate: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var termsAccepted by remember { mutableStateOf(false) }
@@ -707,6 +737,41 @@ private fun ContractCard(
                                             )
                                         } else {
                                             Text("Aceptar contrato")
+                                        }
+                                    }
+                                }
+
+                                // Rate contract
+                                if (contract.status.equals("active", ignoreCase = true)) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    HorizontalDivider(color = Color(0xFFF0F2F5))
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    if (isRatingSuccess) {
+                                        Text(
+                                            text = "¡Calificación enviada!",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF388E3C),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    } else {
+                                        Button(
+                                            onClick = onRate,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.EmojiEvents,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp),
+                                                tint = Color(0xFF1A2332)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Calificar",
+                                                color = Color(0xFF1A2332),
+                                                fontWeight = FontWeight.Medium
+                                            )
                                         }
                                     }
                                 }
