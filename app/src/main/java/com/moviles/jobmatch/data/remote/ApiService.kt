@@ -27,13 +27,18 @@ import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
+import com.moviles.jobmatch.data.remote.model.UpdateDescriptionRequest
+import com.moviles.jobmatch.data.remote.model.UserProfileResponse
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -133,4 +138,17 @@ interface ApiService {
         @Path("userId") userId: String,
         @Body request: DeleteUserRequest
     ): Response<Unit>
+
+    @Multipart
+    @PUT("users/{userId}/avatar")
+    suspend fun updateAvatar(
+        @Path("userId") userId: String,
+        @Part avatar: MultipartBody.Part
+    ): Response<UserProfileResponse>
+
+    @PUT("users/{userId}/description")
+    suspend fun updateDescription(
+        @Path("userId") userId: String,
+        @Body request: UpdateDescriptionRequest
+    ): Response<UserProfileResponse>
 }

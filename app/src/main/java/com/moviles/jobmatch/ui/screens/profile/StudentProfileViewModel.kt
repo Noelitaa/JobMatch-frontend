@@ -1,5 +1,7 @@
 package com.moviles.jobmatch.ui.screens.profile
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -28,7 +30,12 @@ data class StudentProfileUiState(
     val acceptingContractIds: Set<Int> = emptySet(),
     val contractAcceptErrors: Map<Int, String> = emptyMap(),
     val contractsErrorMessage: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isUploadingAvatar: Boolean = false,
+    val avatarUploadError: String? = null,
+    val isUpdatingDescription: Boolean = false,
+    val descriptionUpdateError: String? = null,
+    val descriptionUpdateSuccess: Boolean = false
 )
 
 class StudentProfileViewModel(
@@ -91,6 +98,48 @@ class StudentProfileViewModel(
                 }
             }
         }
+    }
+
+    fun uploadAvatar(userId: String, imageUri: Uri, context: Context) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingAvatar = true, avatarUploadError = null) }
+            when (val result = studentRepository.updateAvatar(userId, imageUri, context)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUploadingAvatar = false) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUploadingAvatar = false, avatarUploadError = result.message)
+                }
+            }
+        }
+    }
+
+    fun updateDescription(userId: String, description: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingDescription = true, descriptionUpdateError = null) }
+            when (val result = studentRepository.updateDescription(userId, description)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUpdatingDescription = false, descriptionUpdateSuccess = true) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUpdatingDescription = false, descriptionUpdateError = result.message)
+                }
+            }
+        }
+    }
+
+    fun clearAvatarError() {
+        _uiState.update { it.copy(avatarUploadError = null) }
+    }
+
+    fun clearDescriptionError() {
+        _uiState.update { it.copy(descriptionUpdateError = null) }
+    }
+
+    fun clearDescriptionSuccess() {
+        _uiState.update { it.copy(descriptionUpdateSuccess = false) }
     }
 
     fun acceptContract(contractId: Int) {

@@ -28,7 +28,7 @@ data class UserProfileResponse(
     val role: String,
     val avatar: String?,
     val phone: String?,
-    val bio: String?,
+    val description: String?,
     val active: Boolean
 )
 
