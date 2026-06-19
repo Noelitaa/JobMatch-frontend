@@ -28,9 +28,11 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -323,7 +325,10 @@ fun StudentProfileScreen(
                                             detail = uiState.contractDetails[contract.idContract],
                                             isLoadingDetail = contract.idContract in uiState.loadingContractIds,
                                             detailError = uiState.contractDetailErrors[contract.idContract],
-                                            onExpand = { viewModel.loadContractDetail(contract.idContract) }
+                                            isAccepting = contract.idContract in uiState.acceptingContractIds,
+                                            acceptError = uiState.contractAcceptErrors[contract.idContract],
+                                            onExpand = { viewModel.loadContractDetail(contract.idContract) },
+                                            onAccept = { viewModel.acceptContract(contract.idContract) }
                                         )
                                     }
                                 }
@@ -410,9 +415,13 @@ private fun ContractCard(
     detail: ContractDetailResponse?,
     isLoadingDetail: Boolean,
     detailError: String?,
-    onExpand: () -> Unit
+    isAccepting: Boolean,
+    acceptError: String?,
+    onExpand: () -> Unit,
+    onAccept: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var termsAccepted by remember { mutableStateOf(false) }
 
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -645,8 +654,60 @@ private fun ContractCard(
                                     }
                                 }
 
-                                // TODO: Accept/reject buttons when contract.status == "pending"
-                                // Endpoint: PUT /contracts/{contractId}/accept
+                                // Accept contract
+                                if (contract.status.equals("pending", ignoreCase = true)) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    HorizontalDivider(color = Color(0xFFF0F2F5))
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(enabled = !isAccepting) {
+                                                termsAccepted = !termsAccepted
+                                            }
+                                    ) {
+                                        Checkbox(
+                                            checked = termsAccepted,
+                                            onCheckedChange = { termsAccepted = it },
+                                            enabled = !isAccepting
+                                        )
+                                        Text(
+                                            text = "He leído y acepto los términos del contrato.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF1A2332)
+                                        )
+                                    }
+
+                                    if (acceptError != null) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = acceptError,
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = onAccept,
+                                        enabled = termsAccepted && !isAccepting,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                                    ) {
+                                        if (isAccepting) {
+                                            CircularProgressIndicator(
+                                                color = Color.White,
+                                                modifier = Modifier.size(18.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Text("Aceptar contrato")
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
