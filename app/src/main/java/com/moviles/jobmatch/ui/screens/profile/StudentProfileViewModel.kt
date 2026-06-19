@@ -112,11 +112,22 @@ class StudentProfileViewModel(
                         ratingSuccessIds = it.ratingSuccessIds + contractId
                     )
                 }
-                is ApiResult.Error -> _uiState.update {
-                    it.copy(
-                        ratingLoadingIds = it.ratingLoadingIds - contractId,
-                        ratingErrors = it.ratingErrors + (contractId to result.message)
-                    )
+                is ApiResult.Error -> {
+                    if (result.statusCode == 409) {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingSuccessIds = it.ratingSuccessIds + contractId
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingErrors = it.ratingErrors + (contractId to result.message)
+                            )
+                        }
+                    }
                 }
             }
         }

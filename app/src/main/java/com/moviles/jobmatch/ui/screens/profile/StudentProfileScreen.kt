@@ -335,10 +335,8 @@ fun StudentProfileScreen(
                                             detailError = uiState.contractDetailErrors[contract.idContract],
                                             isAccepting = contract.idContract in uiState.acceptingContractIds,
                                             acceptError = uiState.contractAcceptErrors[contract.idContract],
-                                            isRatingSuccess = contract.idContract in uiState.ratingSuccessIds,
                                             onExpand = { viewModel.loadContractDetail(contract.idContract) },
-                                            onAccept = { viewModel.acceptContract(contract.idContract) },
-                                            onRate = { ratingContractId = contract.idContract }
+                                            onAccept = { viewModel.acceptContract(contract.idContract) }
                                         )
                                     }
                                 }
@@ -347,6 +345,74 @@ fun StudentProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Calificaciones ---
+                    val activeContracts = contracts.filter { it.status.equals("active", ignoreCase = true) }
+                    if (activeContracts.isNotEmpty()) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            SectionHeader(title = "Calificaciones")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    activeContracts.forEachIndexed { index, contract ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = contract.jobTitle,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color(0xFF1A2332)
+                                                )
+                                                Text(
+                                                    text = contract.companyName,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(0xFF5A6A7A)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            if (contract.idContract in uiState.ratingSuccessIds) {
+                                                Text(
+                                                    text = "Ya calificado",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(0xFF388E3C),
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            } else {
+                                                Surface(
+                                                    shape = RoundedCornerShape(20.dp),
+                                                    color = Color(0xFFFFC107),
+                                                    modifier = Modifier.clickable { ratingContractId = contract.idContract }
+                                                ) {
+                                                    Text(
+                                                        text = "Calificar",
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color(0xFF1A2332),
+                                                        fontSize = 11.sp
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (index < activeContracts.lastIndex) {
+                                            HorizontalDivider(color = Color(0xFFF0F2F5))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
                     // --- Footer ---
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -426,6 +492,8 @@ fun StudentProfileScreen(
             }
         }
         RatingDialog(
+            title = "Calificar a la empresa",
+            description = "¿Cómo fue tu experiencia con la empresa?",
             isLoading = activeRatingId in uiState.ratingLoadingIds,
             errorMessage = uiState.ratingErrors[activeRatingId],
             onConfirm = { stars, comment ->
@@ -447,10 +515,8 @@ private fun ContractCard(
     detailError: String?,
     isAccepting: Boolean,
     acceptError: String?,
-    isRatingSuccess: Boolean,
     onExpand: () -> Unit,
-    onAccept: () -> Unit,
-    onRate: () -> Unit
+    onAccept: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var termsAccepted by remember { mutableStateOf(false) }
@@ -741,40 +807,6 @@ private fun ContractCard(
                                     }
                                 }
 
-                                // Rate contract
-                                if (contract.status.equals("active", ignoreCase = true)) {
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    HorizontalDivider(color = Color(0xFFF0F2F5))
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    if (isRatingSuccess) {
-                                        Text(
-                                            text = "¡Calificación enviada!",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFF388E3C),
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    } else {
-                                        Button(
-                                            onClick = onRate,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            shape = RoundedCornerShape(10.dp),
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.EmojiEvents,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(18.dp),
-                                                tint = Color(0xFF1A2332)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "Calificar",
-                                                color = Color(0xFF1A2332),
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
