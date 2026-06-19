@@ -29,6 +29,9 @@ import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
 import com.moviles.jobmatch.data.remote.model.RegisterFcmTokenRequest
+import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
+import com.moviles.jobmatch.data.remote.model.RatingResponse
+import com.moviles.jobmatch.data.remote.model.ReceivedRatingResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -114,6 +117,12 @@ interface ApiService {
 
     @PUT("contracts/{contractId}/accept")
     suspend fun acceptContract(@Path("contractId") contractId: Int): Response<ContractAcceptResponse>
+
+    @POST("ratings")
+    suspend fun submitRating(@Body request: CreateRatingRequest): Response<RatingResponse>
+
+    @GET("ratings/me")
+    suspend fun getMyRatings(): Response<List<ReceivedRatingResponse>>
 
     @GET("payments")
     suspend fun getPaymentHistory(

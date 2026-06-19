@@ -38,4 +38,8 @@ object AppContainer {
     val fcmRepository: FcmRepository by lazy {
         FcmRepository(RetrofitClient.apiService)
     }
+
+    val ratingRepository: RatingRepository by lazy {
+        RatingRepository(RetrofitClient.apiService)
+    }
 }
