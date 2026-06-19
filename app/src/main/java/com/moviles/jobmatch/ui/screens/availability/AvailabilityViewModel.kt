@@ -31,7 +31,8 @@ data class AvailabilityUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null,   // load error — replaces full screen
+    val saveError: String? = null,      // save error — shown inline below button
     // grid[dayIndex][blockIndex] = true/false
     val grid: List<List<Boolean>> = List(7) { List(3) { false } },
     // how many active days each block has
@@ -88,13 +89,14 @@ class AvailabilityViewModel(
     fun saveAvailability() {
         val studentId = AuthSession.currentUser?.userId ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            _uiState.update { it.copy(isSaving = true, saveError = null) }
+
             val body = gridToUpdateRequest(_uiState.value.grid)
             when (val result = studentRepository.updateAvailability(studentId, body)) {
                 is ApiResult.Success ->
                     _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
                 is ApiResult.Error ->
-                    _uiState.update { it.copy(isSaving = false, errorMessage = result.message) }
+                    _uiState.update { it.copy(isSaving = false, saveError = result.message) }
             }
         }
     }
@@ -119,9 +121,10 @@ class AvailabilityViewModel(
     private fun gridToUpdateRequest(grid: List<List<Boolean>>): UpdateAvailabilityRequest {
         val blocks = mutableListOf<TimeBlockRequest>()
         grid.forEachIndexed { dayIndex, row ->
+            val backendDay = (dayIndex + 1) % 7
             TimeBlock.entries.forEachIndexed { blockIndex, block ->
                 if (row[blockIndex]) {
-                    blocks.add(TimeBlockRequest(day = dayIndex, startTime = block.start, endTime = block.end))
+                    blocks.add(TimeBlockRequest(day = backendDay, startTime = block.start, endTime = block.end))
                 }
             }
         }

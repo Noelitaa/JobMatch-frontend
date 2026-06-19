@@ -16,7 +16,7 @@ data class AvailabilityResponse(
 )
 
 data class TimeBlockRequest(
-    val day: Int,           // 0 = Monday … 6 = Sunday
+    val day: Int,           // Backend convention: 0 = Sunday, 1 = Monday … 6 = Saturday
     val startTime: String,
     val endTime: String
 )

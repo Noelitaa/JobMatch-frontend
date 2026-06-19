@@ -143,6 +143,14 @@ fun AvailabilityScreen(
                         }
                     }
 
+                    state.saveError?.let { error ->
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                 }
             }
