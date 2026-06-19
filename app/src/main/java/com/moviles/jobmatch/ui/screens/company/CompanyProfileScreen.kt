@@ -38,6 +38,7 @@ fun CompanyProfileScreen(
     companyId: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {},
     onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
     viewModel: CompanyProfileViewModel = viewModel()
@@ -102,6 +103,7 @@ fun CompanyProfileScreen(
                     company = uiState.company!!,
                     uiState = uiState,
                     isOwnProfile = isOwnProfile,
+                    onPaymentHistory = onPaymentHistory,
                     onDeleteClick = { showDeleteDialog = true },
                     onExpandContract = { viewModel.loadContractDetail(it) },
                     onMakePayment = onMakePayment,
@@ -132,6 +134,7 @@ fun CompanyProfileContent(
     uiState: CompanyProfileUiState,
     modifier: Modifier = Modifier,
     isOwnProfile: Boolean = false,
+    onPaymentHistory: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onExpandContract: (Int) -> Unit = {},
     onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> }
@@ -240,6 +243,31 @@ fun CompanyProfileContent(
         }
 
         if (isOwnProfile) {
+            OutlinedButton(
+                onClick = onPaymentHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, DarkBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+            ) {
+                Icon(
+                    Icons.Default.Receipt,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Historial de Pagos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedButton(
                 onClick = onDeleteClick,
                 modifier = Modifier
