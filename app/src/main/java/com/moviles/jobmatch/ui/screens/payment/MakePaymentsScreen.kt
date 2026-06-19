@@ -175,7 +175,7 @@ fun MakePaymentScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 JobMatchButton(
                     text = if (state.isLoading) "Procesando…"
-                    else "Confirmar y Pagar ¢${formatAmount(state.amount)}",
+                    else "Confirmar y Pagar ₡${formatAmount(state.amount)}",
                     onClick = { vm.submitPayment() },
                     enabled = !state.isLoading
                 )
@@ -225,7 +225,7 @@ private fun ServiceSummaryCard(
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
 
-            // Title row with "Pendiente" chip
+            // Title row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,21 +239,9 @@ private fun ServiceSummaryCard(
                         fontSize = 15.sp
                     )
                     Text(
-                        contractNumber,
+                        "Contrato: #$contractNumber",
                         color = Color.White.copy(alpha = 0.75f),
                         fontSize = 12.sp
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.White.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        "Pendiente",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -262,7 +250,7 @@ private fun ServiceSummaryCard(
 
             // Total amount
             Text(
-                "¢${formatAmount(total)}",
+                "₡${formatAmount(total)}",
                 color = Color.White,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold
@@ -278,9 +266,9 @@ private fun ServiceSummaryCard(
             Spacer(Modifier.height(12.dp))
 
             // Subtotal / commission breakdown
-            SummaryLine("Subtotal", "¢${formatAmount(subtotal)}")
+            SummaryLine("Pago neto al estudiante", "₡${formatAmount(subtotal)}")
             Spacer(Modifier.height(6.dp))
-            SummaryLine("Comisión JobMatch (6%)", "¢${formatAmount(commission)}")
+            SummaryLine("Comisión JobMatch (6%)", "₡${formatAmount(commission)}")
         }
     }
 }
@@ -375,13 +363,13 @@ private fun PaymentForm(
         PaymentTextField(
             value = amount,
             onValueChange = onAmountChange,
-            label = "Monto a pagar (¢)",
+            label = "Monto a pagar (₡)",
             placeholder = "0",
             keyboardType = KeyboardType.Number,
             isError = amountError != null,
             errorMessage = amountError,
             leadingIcon = {
-                Text("¢", modifier = Modifier.padding(start = 12.dp), color = TextMuted, fontWeight = FontWeight.Bold)
+                Text("₡", modifier = Modifier.padding(start = 12.dp), color = TextMuted, fontWeight = FontWeight.Bold)
             }
         )
 
