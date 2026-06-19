@@ -16,11 +16,22 @@ sealed class JobDetailUiState {
     data class Error(val message: String) : JobDetailUiState()
 }
 
+sealed class ApplyState {
+    data object Idle : ApplyState()
+    data object Loading : ApplyState()
+    data object Success : ApplyState()
+    data class Error(val message: String) : ApplyState()
+}
+
 class JobDetailViewModel : ViewModel() {
     private val repository = AppContainer.jobRepository
+    private val applicationRepository = AppContainer.applicationRepository
 
     private val _uiState = MutableStateFlow<JobDetailUiState>(JobDetailUiState.Loading)
     val uiState: StateFlow<JobDetailUiState> = _uiState.asStateFlow()
+
+    private val _applyState = MutableStateFlow<ApplyState>(ApplyState.Idle)
+    val applyState: StateFlow<ApplyState> = _applyState.asStateFlow()
 
     fun loadJobDetail(jobId: Int) {
         viewModelScope.launch {
@@ -30,5 +41,20 @@ class JobDetailViewModel : ViewModel() {
                 is ApiResult.Error -> _uiState.value = JobDetailUiState.Error(result.message)
             }
         }
+    }
+
+    fun applyToJob(jobId: Int) {
+        if (_applyState.value is ApplyState.Loading) return
+        viewModelScope.launch {
+            _applyState.value = ApplyState.Loading
+            when (val result = applicationRepository.applyToJob(jobId)) {
+                is ApiResult.Success -> _applyState.value = ApplyState.Success
+                is ApiResult.Error -> _applyState.value = ApplyState.Error(result.message)
+            }
+        }
+    }
+
+    fun resetApplyState() {
+        _applyState.value = ApplyState.Idle
     }
 }

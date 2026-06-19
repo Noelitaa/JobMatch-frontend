@@ -3,6 +3,7 @@ package com.moviles.jobmatch.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.moviles.jobmatch.data.Job
 import com.moviles.jobmatch.ui.theme.DarkBlue
+import com.moviles.jobmatch.ui.components.SkillChip
 
 @Composable
 fun JobCard(
@@ -85,9 +87,19 @@ fun JobCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {
-                InfoTag(text = "${job.startTime} - ${job.endTime}", icon = "🕒")
+                InfoTag(text = "${job.startTime ?: ""} - ${job.endTime ?: ""}", icon = "🕒")
                 Spacer(modifier = Modifier.width(8.dp))
                 InfoTag(text = "Cerca de ti", icon = "📍")
+            }
+
+            if (!job.skillsRequired.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    job.skillsRequired.forEach { skill -> SkillChip(skill) }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

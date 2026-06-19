@@ -1,6 +1,7 @@
 package com.moviles.jobmatch.ui.screens.job
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +27,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
+import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.theme.DarkBlue
+import com.moviles.jobmatch.ui.utils.formatApplicationDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +37,8 @@ fun ApplicationsScreen(
     jobId: Int,
     jobTitle: String,
     onBackPressed: () -> Unit = {},
+    onStudentClick: (String) -> Unit = {},
+    onViewApplicationDetail: (ApplicationResponse, Int) -> Unit = { _, _ -> },
     viewModel: ApplicationsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -107,7 +113,9 @@ fun ApplicationsScreen(
                             application = application,
                             isUpdating = uiState.updatingId == application.idApplication,
                             onAccept = { viewModel.updateStatus(application.idApplication, "accepted") },
-                            onReject = { viewModel.updateStatus(application.idApplication, "rejected") }
+                            onReject = { viewModel.updateStatus(application.idApplication, "rejected") },
+                            onStudentClick = { onStudentClick(application.idStudent) },
+                            onViewDetail = { onViewApplicationDetail(application, jobId) }
                         )
                     }
                 }
@@ -121,7 +129,9 @@ private fun ApplicantCard(
     application: ApplicationResponse,
     isUpdating: Boolean,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onStudentClick: () -> Unit = {},
+    onViewDetail: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -130,7 +140,12 @@ private fun ApplicantCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable(onClick = onStudentClick)
+                    .padding(vertical = 4.dp)
+            ) {
                 Box(
                     modifier = Modifier
                         .size(46.dp)
@@ -153,7 +168,7 @@ private fun ApplicantCard(
                         text = application.studentName,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
-                        color = Color(0xFF1A1A2E)
+                        color = DarkBlue
                     )
                     Text(
                         text = application.studentEmail,
@@ -171,12 +186,53 @@ private fun ApplicantCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     application.studentUniversity?.let {
-                        InfoChip(label = it)
+                        SkillChip(
+                            text = it,
+                            backgroundColor = Color(0xFFF5F5F5),
+                            textColor = Color(0xFF5A6A7A),
+                            shape = RoundedCornerShape(8.dp),
+                            fontSize = 11.sp
+                        )
                     }
                     application.studentCareer?.let {
-                        InfoChip(label = it)
+                        SkillChip(
+                            text = it,
+                            backgroundColor = Color(0xFFF5F5F5),
+                            textColor = Color(0xFF5A6A7A),
+                            shape = RoundedCornerShape(8.dp),
+                            fontSize = 11.sp
+                        )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = Color.Gray
+                )
+                Text(
+                    text = "Postulado el ${formatApplicationDate(application.createdAt)}",
+                    fontSize = 11.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onViewDetail,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DarkBlue)
+            ) {
+                Text("Ver detalle de la postulación", fontSize = 13.sp)
             }
 
             if (application.status.lowercase() == "pending") {
@@ -238,14 +294,3 @@ private fun StatusChip(status: String) {
     }
 }
 
-@Composable
-private fun InfoChip(label: String) {
-    Surface(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp)) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            fontSize = 11.sp,
-            color = Color(0xFF5A6A7A)
-        )
-    }
-}

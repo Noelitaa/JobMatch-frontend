@@ -13,18 +13,29 @@ import com.moviles.jobmatch.data.remote.model.RegisterStudentRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobRequest
 import com.moviles.jobmatch.data.remote.model.CreateJobResponse
 import com.moviles.jobmatch.data.remote.model.ApplicationResponse
+import com.moviles.jobmatch.data.remote.model.CreateApplicationRequest
+import com.moviles.jobmatch.data.remote.model.CreateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.AddSkillRequest
 import com.moviles.jobmatch.data.remote.model.AddSkillResponse
+import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
+import com.moviles.jobmatch.data.remote.model.ContractAcceptResponse
+import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
+import com.moviles.jobmatch.data.remote.model.ContractListResponse
+import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
+import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST(AppConstants.Api.Paths.AUTH_LOGIN)
@@ -45,11 +56,23 @@ interface ApiService {
     @GET("jobs")
     suspend fun getAllJobs(): Response<List<Job>>
 
+    @GET("jobs/recommended")
+    suspend fun getRecommendedJobs(): Response<List<Job>>
+
     @POST("jobs")
     suspend fun createJob(@Body request: CreateJobRequest): Response<CreateJobResponse>
-  
+
     @GET("jobs/{jobId}")
     suspend fun getJobById(@Path("jobId") jobId: Int): Response<JobDetailResponse>
+
+    @PUT("jobs/{jobId}")
+    suspend fun updateJob(
+        @Path("jobId") jobId: Int,
+        @Body request: UpdateJobRequest
+    ): Response<JobDetailResponse>
+
+    @POST("applications")
+    suspend fun applyToJob(@Body request: CreateApplicationRequest): Response<CreateApplicationResponse>
 
     @GET("jobs/{jobId}/applications")
     suspend fun getApplicationsByJob(@Path("jobId") jobId: Int): Response<List<ApplicationResponse>>
@@ -59,6 +82,7 @@ interface ApiService {
         @Path("applicationId") applicationId: Int,
         @Body request: UpdateApplicationRequest
     ): Response<UpdateApplicationResponse>
+
     @GET(AppConstants.Api.Paths.STUDENT_PROFILE_PATH)
     suspend fun getStudentProfile(
         @Path("studentId") studentId: String
@@ -77,5 +101,36 @@ interface ApiService {
     suspend fun removeSkillFromStudent(
         @Path("studentId") studentId: String,
         @Path("skillId") skillId: String
+    ): Response<Unit>
+
+    @GET("students/{studentId}/availability")
+    suspend fun getAvailability(
+        @Path("studentId") studentId: String
+    ): Response<AvailabilityResponse>
+
+    @PUT("students/{studentId}/availability")
+    suspend fun updateAvailability(
+        @Path("studentId") studentId: String,
+        @Body body: UpdateAvailabilityRequest
+    ): Response<Unit>
+
+    @GET("contracts/student")
+    suspend fun getStudentContracts(): Response<List<ContractListResponse>>
+
+    @GET("contracts")
+    suspend fun getCompanyContracts(
+        @Query("status") status: String? = null
+    ): Response<List<ContractListResponse>>
+
+    @GET("contracts/{contractId}")
+    suspend fun getContractById(@Path("contractId") contractId: Int): Response<ContractDetailResponse>
+
+    @PUT("contracts/{contractId}/accept")
+    suspend fun acceptContract(@Path("contractId") contractId: Int): Response<ContractAcceptResponse>
+
+    @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
+    suspend fun deleteUser(
+        @Path("userId") userId: String,
+        @Body request: DeleteUserRequest
     ): Response<Unit>
 }

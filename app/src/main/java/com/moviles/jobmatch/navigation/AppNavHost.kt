@@ -21,19 +21,26 @@ import com.google.gson.Gson
 import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
 import com.moviles.jobmatch.data.repository.JobRepository
+import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
+import com.moviles.jobmatch.ui.screens.company.CompanyJobsScreen
 import com.moviles.jobmatch.ui.screens.company.CompanyProfileScreen
 import com.moviles.jobmatch.ui.screens.company.CreateJobScreen
+import com.moviles.jobmatch.ui.screens.job.ApplicationDetailScreen
 import com.moviles.jobmatch.ui.screens.job.ApplicationsScreen
+import com.moviles.jobmatch.ui.screens.job.EditJobScreen
+import com.moviles.jobmatch.ui.screens.profile.StudentPublicProfileScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
+import com.moviles.jobmatch.ui.screens.job.StudentDashboardScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.SkillSelectionScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
+import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -50,8 +57,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.REGISTER &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
+            currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
-            currentRoute?.startsWith(AppDestinations.SKILL_SELECTION) != true
+            currentRoute?.startsWith(AppDestinations.SKILL_SELECTION) != true &&
+            currentRoute?.startsWith(AppDestinations.STUDENT_PUBLIC_PROFILE) != true &&
+            currentRoute?.startsWith(AppDestinations.APPLICATION_DETAIL) != true
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -98,7 +108,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         val destination = if (AuthSession.isCompany)
                             AppDestinations.COMPANY_DASHBOARD
                         else
-                            AppDestinations.JOBS_EXPLORE
+                            AppDestinations.SEARCH_COMPANY
                         navController.navigate(destination) {
                             popUpTo(AppDestinations.LOGIN) { inclusive = true }
                         }
@@ -126,19 +136,36 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(route = AppDestinations.SEARCH_COMPANY) {
-                PlaceholderScreen("Inicio")
+                if (AuthSession.isCompany) {
+                    PlaceholderScreen("Inicio")
+                } else {
+                    StudentDashboardScreen(
+                        onJobClick = { jobId ->
+                            navController.navigate(AppDestinations.jobDetailRoute(jobId))
+                        }
+                    )
+                }
             }
 
             composable(route = AppDestinations.JOBS_EXPLORE) {
                 if (AuthSession.isCompany) {
-                    PlaceholderScreen("Trabajos")
+                    val companyId = AuthSession.currentUser?.userId ?: ""
+                    CompanyJobsScreen(
+                        onCreateJob = {
+                            navController.navigate(AppDestinations.createJobRoute(companyId))
+                        },
+                        onEditJob = { id ->
+                            navController.navigate(AppDestinations.editJobRoute(id))
+                        },
+                        onJobClick = { id, title ->
+                            navController.navigate(AppDestinations.applicationsRoute(id, title))
+                        }
+                    )
                 } else {
-                    val apiService = com.moviles.jobmatch.data.remote.RetrofitClient.apiService
-                    val repository = JobRepository(apiService)
                     val jobsViewModel: JobsViewModel = viewModel(
                         factory = object : androidx.lifecycle.ViewModelProvider.Factory {
                             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                                return JobsViewModel(repository) as T
+                                return JobsViewModel(AppContainer.jobRepository) as T
                             }
                         }
                     )
@@ -167,6 +194,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     refreshKey = refreshKey,
                     onEditSkills = { studentId, skills ->
                         navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    },
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -179,6 +214,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     refreshKey = refreshKey,
                     onEditSkills = { studentId, skills ->
                         navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    },
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -202,7 +245,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 val id = backStackEntry.arguments?.getString("companyId").orEmpty()
                 CompanyProfileScreen(
                     companyId = id,
-                    onBackPressed = { navController.popBackStack() }
+                    onBackPressed = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 
@@ -211,14 +259,37 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 arguments = listOf(navArgument("jobId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("refresh_key", 0)
+                    .collectAsStateWithLifecycle()
                 JobDetailScreen(
                     jobId = jobId,
+                    refreshKey = refreshKey,
                     onBackPressed = { navController.popBackStack() },
                     onViewApplicants = { id, title ->
                         navController.navigate(AppDestinations.applicationsRoute(id, title))
                     },
+                    onEditJob = { id ->
+                        navController.navigate(AppDestinations.editJobRoute(id))
+                    },
                     onCompanyClick = { companyId ->
                         navController.navigate(AppDestinations.companyProfileRoute(companyId))
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.EDIT_JOB}/{jobId}",
+                arguments = listOf(navArgument("jobId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val jobId = backStackEntry.arguments?.getInt("jobId") ?: 0
+                EditJobScreen(
+                    jobId = jobId,
+                    onBackPressed = { navController.popBackStack() },
+                    onJobUpdated = {
+                        val prev = navController.previousBackStackEntry?.savedStateHandle
+                        prev?.set("refresh_key", (prev.get<Int>("refresh_key") ?: 0) + 1)
+                        navController.popBackStack()
                     }
                 )
             }
@@ -235,6 +306,64 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 ApplicationsScreen(
                     jobId = jobId,
                     jobTitle = jobTitle,
+                    onBackPressed = { navController.popBackStack() },
+                    onStudentClick = { studentId ->
+                        navController.navigate(AppDestinations.studentPublicProfileRoute(studentId))
+                    },
+                    onViewApplicationDetail = { application, jId ->
+                        navController.navigate(
+                            AppDestinations.applicationDetailRoute(
+                                applicationId = application.idApplication,
+                                jobId = jId,
+                                jobTitle = application.jobTitle,
+                                studentId = application.idStudent,
+                                studentName = application.studentName,
+                                studentEmail = application.studentEmail,
+                                status = application.status,
+                                createdAt = application.createdAt
+                            )
+                        )
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.APPLICATION_DETAIL}/{applicationId}/{jobId}/{jobTitle}/{studentId}/{studentName}/{studentEmail}/{status}/{createdAt}",
+                arguments = listOf(
+                    navArgument("applicationId") { type = NavType.IntType },
+                    navArgument("jobId") { type = NavType.IntType },
+                    navArgument("jobTitle") { type = NavType.StringType },
+                    navArgument("studentId") { type = NavType.StringType },
+                    navArgument("studentName") { type = NavType.StringType },
+                    navArgument("studentEmail") { type = NavType.StringType },
+                    navArgument("status") { type = NavType.StringType },
+                    navArgument("createdAt") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val args = backStackEntry.arguments ?: return@composable
+                ApplicationDetailScreen(
+                    applicationId = args.getInt("applicationId"),
+                    jobId = args.getInt("jobId"),
+                    jobTitle = args.getString("jobTitle").orEmpty(),
+                    studentId = args.getString("studentId").orEmpty(),
+                    studentName = args.getString("studentName").orEmpty(),
+                    studentEmail = args.getString("studentEmail").orEmpty(),
+                    status = args.getString("status").orEmpty(),
+                    createdAt = args.getString("createdAt").orEmpty(),
+                    onBackPressed = { navController.popBackStack() },
+                    onViewStudentProfile = { studentId ->
+                        navController.navigate(AppDestinations.studentPublicProfileRoute(studentId))
+                    }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.STUDENT_PUBLIC_PROFILE}/{studentId}",
+                arguments = listOf(navArgument("studentId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val studentId = backStackEntry.arguments?.getString("studentId").orEmpty()
+                StudentPublicProfileScreen(
+                    studentId = studentId,
                     onBackPressed = { navController.popBackStack() }
                 )
             }
@@ -261,6 +390,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         prev?.set("profile_refresh_key", (prev.get<Int>("profile_refresh_key") ?: 0) + 1)
                         navController.popBackStack()
                     }
+                )
+            }
+
+            composable(route = AppDestinations.AVAILABILITY) {
+                AvailabilityScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
                 )
             }
         }

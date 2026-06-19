@@ -39,18 +39,37 @@ import java.util.Locale
 @Composable
 fun JobDetailScreen(
     jobId: Int,
+    refreshKey: Int = 0,
     onBackPressed: () -> Unit = {},
     onViewApplicants: (Int, String) -> Unit = { _, _ -> },
+    onEditJob: (Int) -> Unit = {},
     onCompanyClick: (String) -> Unit = {},
     viewModel: JobDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val applyState by viewModel.applyState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(jobId) {
+    LaunchedEffect(jobId, refreshKey) {
         viewModel.loadJobDetail(jobId)
     }
 
+    LaunchedEffect(applyState) {
+        when (val state = applyState) {
+            is ApplyState.Success -> {
+                snackbarHostState.showSnackbar("Application submitted successfully!")
+                viewModel.resetApplyState()
+            }
+            is ApplyState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetApplyState()
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -84,10 +103,14 @@ fun JobDetailScreen(
                 val job = (uiState as JobDetailUiState.Success).job
                 if (AuthSession.isCompany) {
                     CompanyJobBottomBar(
-                        onViewApplicants = { onViewApplicants(job.idJob, job.title) }
+                        onViewApplicants = { onViewApplicants(job.idJob, job.title) },
+                        onEdit = { onEditJob(job.idJob) }
                     )
                 } else {
-                    JobDetailBottomBar()
+                    JobDetailBottomBar(
+                        isApplying = applyState is ApplyState.Loading,
+                        onApply = { viewModel.applyToJob(job.idJob) }
+                    )
                 }
             }
         },
@@ -168,8 +191,8 @@ private fun JobDetailContent(
         item { InfoCardsRow(job = job) }
         item { CompatibilityCard() }
         item { DescriptionCard(job = job) }
-        if (!job.deliverables.isNullOrBlank()) {
-            item { DeliverablesCard(deliverables = job.deliverables) }
+        if (!job.deliverables.isNullOrEmpty()) {
+            item { DeliverablesCard(deliverables = job.deliverables!!) }
         }
         item { ScheduleCard(job = job) }
         item { LocationCard(job = job) }
@@ -458,9 +481,7 @@ private fun DescriptionCard(job: JobDetailResponse) {
 }
 
 @Composable
-private fun DeliverablesCard(deliverables: String) {
-    val items = deliverables.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
+private fun DeliverablesCard(deliverables: List<String>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -477,7 +498,7 @@ private fun DeliverablesCard(deliverables: String) {
                 color = Color(0xFF1A1A2E)
             )
             Spacer(modifier = Modifier.height(14.dp))
-            items.forEach { item ->
+            deliverables.forEach { item ->
                 Row(
                     modifier = Modifier.padding(vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -566,36 +587,54 @@ private fun ScheduleCard(job: JobDetailResponse) {
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            tint = DarkBlue,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = formatDate(job.workDate),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF1A1A2E)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = DarkBlue,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${formatTime(job.startTime)} - ${formatTime(job.endTime)}",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF1A1A2E)
-                        )
+                    if (job.type == "autonomous") {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${job.startDate?.let { formatDate(it) } ?: "-"} → ${job.endDate?.let { formatDate(it) } ?: "-"}",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = job.workDate?.let { formatDate(it) } ?: "-",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = DarkBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${job.startTime?.let { formatTime(it) } ?: "-"} - ${job.endTime?.let { formatTime(it) } ?: "-"}",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     HorizontalDivider(color = Color(0xFFEEEEEE))
@@ -802,7 +841,10 @@ private fun TrustCard() {
 }
 
 @Composable
-private fun JobDetailBottomBar() {
+private fun JobDetailBottomBar(
+    isApplying: Boolean = false,
+    onApply: () -> Unit = {}
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
@@ -830,47 +872,75 @@ private fun JobDetailBottomBar() {
             }
 
             Button(
-                onClick = {},
+                onClick = onApply,
+                enabled = !isApplying,
                 modifier = Modifier
                     .weight(1f)
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
             ) {
-                Text(
-                    text = "Postularse Ahora",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                if (isApplying) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Postularse Ahora",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CompanyJobBottomBar(onViewApplicants: () -> Unit) {
+private fun CompanyJobBottomBar(onViewApplicants: () -> Unit, onEdit: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
         color = Color.White
     ) {
-        Button(
-            onClick = onViewApplicants,
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
-                .navigationBarsPadding()
-                .height(50.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                .navigationBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Ver Postulantes", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            OutlinedButton(
+                onClick = onViewApplicants,
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.5.dp, DarkBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+            ) {
+                Text("Ver Postulantes", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
+            Button(
+                onClick = onEdit,
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Editar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
         }
     }
 }
