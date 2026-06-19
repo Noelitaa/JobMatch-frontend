@@ -54,6 +54,9 @@ interface ApiService {
     @GET("jobs")
     suspend fun getAllJobs(): Response<List<Job>>
 
+    @GET("jobs/recommended")
+    suspend fun getRecommendedJobs(): Response<List<Job>>
+
     @POST("jobs")
     suspend fun createJob(@Body request: CreateJobRequest): Response<CreateJobResponse>
   
