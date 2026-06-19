@@ -38,6 +38,7 @@ import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
 import com.moviles.jobmatch.ui.screens.payment.MakePaymentScreen
+import com.moviles.jobmatch.ui.screens.payment.PaymentHistoryScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -53,6 +54,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val showBottomBar = currentRoute != AppDestinations.SPLASH &&
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.REGISTER &&
+            currentRoute != AppDestinations.PAYMENT_HISTORY &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
             currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
@@ -202,6 +204,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 CompanyProfileScreen(
                     companyId = id,
                     onBackPressed = { navController.popBackStack() },
+                    onPaymentHistory = { navController.navigate(AppDestinations.PAYMENT_HISTORY) },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
@@ -362,6 +365,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
                     },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
+                    },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
@@ -375,6 +381,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
                     },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
+                    },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
@@ -387,6 +396,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 AvailabilityScreen(
                     onBackPressed = { navController.popBackStack() },
                     onSaved = { navController.popBackStack() }
+                )
+            }
+
+            composable(route = AppDestinations.PAYMENT_HISTORY) {
+                PaymentHistoryScreen(
+                    onBackPressed = { navController.popBackStack() }
                 )
             }
         }
