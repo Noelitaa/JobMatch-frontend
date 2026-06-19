@@ -35,6 +35,7 @@ import com.moviles.jobmatch.data.remote.model.RatingResponse
 import com.moviles.jobmatch.data.remote.model.UpdateDescriptionRequest
 import com.moviles.jobmatch.data.remote.model.UserProfileResponse
 import okhttp3.MultipartBody
+import com.moviles.jobmatch.data.remote.model.ReceivedRatingResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -140,6 +141,9 @@ interface ApiService {
 
     @POST("ratings")
     suspend fun submitRating(@Body request: CreateRatingRequest): Response<RatingResponse>
+
+    @GET("ratings/me")
+    suspend fun getMyRatings(): Response<List<ReceivedRatingResponse>>
 
     @GET("payments")
     suspend fun getPaymentHistory(

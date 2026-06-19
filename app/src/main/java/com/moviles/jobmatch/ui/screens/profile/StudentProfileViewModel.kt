@@ -10,6 +10,7 @@ import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
+import com.moviles.jobmatch.data.remote.model.ReceivedRatingResponse
 import com.moviles.jobmatch.data.repository.ApiResult
 import com.moviles.jobmatch.data.repository.ContractRepository
 import com.moviles.jobmatch.data.repository.RatingRepository
@@ -34,6 +35,9 @@ data class StudentProfileUiState(
     val ratingLoadingIds: Set<Int> = emptySet(),
     val ratingSuccessIds: Set<Int> = emptySet(),
     val ratingErrors: Map<Int, String> = emptyMap(),
+    val receivedRatings: List<ReceivedRatingResponse> = emptyList(),
+    val isLoadingRatings: Boolean = false,
+    val ratingsError: String? = null,
     val contractsErrorMessage: String? = null,
     val errorMessage: String? = null,
     val isUploadingAvatar: Boolean = false,
@@ -63,10 +67,11 @@ class StudentProfileViewModel(
     fun loadProfile() {
         val studentId = AuthSession.currentUser?.userId ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, isLoadingContracts = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, isLoadingContracts = true, isLoadingRatings = true, errorMessage = null) }
 
             val profileDeferred = async { studentRepository.getStudentProfile(studentId) }
             val contractsDeferred = async { contractRepository.getStudentContracts() }
+            val ratingsDeferred = async { ratingRepository.getMyRatings() }
 
             when (val result = profileDeferred.await()) {
                 is ApiResult.Success ->
@@ -80,6 +85,13 @@ class StudentProfileViewModel(
                     _uiState.update { it.copy(isLoadingContracts = false, contracts = result.data) }
                 is ApiResult.Error ->
                     _uiState.update { it.copy(isLoadingContracts = false, contractsErrorMessage = result.message) }
+            }
+
+            when (val result = ratingsDeferred.await()) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(isLoadingRatings = false, receivedRatings = result.data) }
+                is ApiResult.Error ->
+                    _uiState.update { it.copy(isLoadingRatings = false, ratingsError = result.message) }
             }
         }
     }
