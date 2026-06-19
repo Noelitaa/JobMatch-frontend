@@ -16,6 +16,10 @@ object NotificationHandler {
         else -> null
     }
 
+    fun setFromPayload(type: String?, entityId: String?) {
+        pendingRoute = resolveRoute(type, entityId)
+    }
+
     fun consume(): String? {
         val route = pendingRoute
         pendingRoute = null
