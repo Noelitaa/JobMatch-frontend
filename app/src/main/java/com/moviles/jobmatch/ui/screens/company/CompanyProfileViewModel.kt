@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.moviles.jobmatch.data.Company
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
+import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
 import com.moviles.jobmatch.data.repository.ApiResult
 import com.moviles.jobmatch.data.repository.AppContainer
 import kotlinx.coroutines.async
@@ -22,6 +23,9 @@ data class CompanyProfileUiState(
     val contractDetails: Map<Int, ContractDetailResponse> = emptyMap(),
     val contractDetailErrors: Map<Int, String> = emptyMap(),
     val loadingContractIds: Set<Int> = emptySet(),
+    val ratingLoadingIds: Set<Int> = emptySet(),
+    val ratingSuccessIds: Set<Int> = emptySet(),
+    val ratingErrors: Map<Int, String> = emptyMap(),
     val contractsErrorMessage: String? = null,
     val errorMessage: String? = null
 )
@@ -47,6 +51,48 @@ class CompanyProfileViewModel : ViewModel() {
                 is ApiResult.Error -> _uiState.update { it.copy(isLoadingContracts = false, contractsErrorMessage = result.message) }
             }
         }
+    }
+
+    fun submitRating(contractId: Int, stars: Int, comment: String?) {
+        if (_uiState.value.ratingLoadingIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    ratingLoadingIds = it.ratingLoadingIds + contractId,
+                    ratingErrors = it.ratingErrors - contractId
+                )
+            }
+            val request = CreateRatingRequest(idContract = contractId, stars = stars, comment = comment)
+            when (val result = AppContainer.ratingRepository.submitRating(request)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        ratingLoadingIds = it.ratingLoadingIds - contractId,
+                        ratingSuccessIds = it.ratingSuccessIds + contractId
+                    )
+                }
+                is ApiResult.Error -> {
+                    if (result.statusCode == 409) {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingSuccessIds = it.ratingSuccessIds + contractId
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingErrors = it.ratingErrors + (contractId to result.message)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun clearRatingError(contractId: Int) {
+        _uiState.update { it.copy(ratingErrors = it.ratingErrors - contractId) }
     }
 
     fun loadContractDetail(contractId: Int) {
