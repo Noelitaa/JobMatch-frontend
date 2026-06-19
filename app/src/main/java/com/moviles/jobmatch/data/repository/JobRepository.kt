@@ -48,7 +48,8 @@ class JobRepository(private val apiService: ApiService) {
             if (response.isSuccessful && response.body() != null) {
                 ApiResult.Success(response.body()!!)
             } else {
-                ApiResult.Error("Error al crear el empleo (${response.code()})", response.code())
+                val message = parseErrorBody(response) ?: "Error al crear el empleo (${response.code()})"
+                ApiResult.Error(message, response.code())
             }
         } catch (e: IOException) {
             ApiResult.Error("No se pudo conectar al servidor")
@@ -64,15 +65,23 @@ class JobRepository(private val apiService: ApiService) {
                 ApiResult.Success(response.body()!!)
             } else if (response.code() == 403) {
                 ApiResult.Error("No tienes permiso para editar esta oferta", 403)
-            } else if (response.code() == 400) {
-                ApiResult.Error("No se puede editar: tiene postulantes aceptados o contrato activo", 400)
             } else {
-                ApiResult.Error("Error al actualizar la oferta (${response.code()})", response.code())
+                val message = parseErrorBody(response) ?: "Error al actualizar la oferta (${response.code()})"
+                ApiResult.Error(message, response.code())
             }
         } catch (e: IOException) {
             ApiResult.Error("No se pudo conectar al servidor")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error inesperado")
+        }
+    }
+
+    private fun parseErrorBody(response: retrofit2.Response<*>): String? {
+        return try {
+            val body = response.errorBody()?.string() ?: return null
+            org.json.JSONObject(body).optString("message").takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            null
         }
     }
 }

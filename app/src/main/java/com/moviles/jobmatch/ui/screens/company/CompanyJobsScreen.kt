@@ -225,7 +225,10 @@ private fun ManageJobCard(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        "Trabajo el ${formatJobDate(job.workDate)}",
+                        when (job.type) {
+                            "autonomous" -> "Del ${formatJobDate(job.startDate ?: "")} al ${formatJobDate(job.endDate ?: "")}"
+                            else -> "Trabajo el ${formatJobDate(job.workDate ?: "")}"
+                        },
                         fontSize = 12.sp,
                         color = Color(0xFF8A9BB0)
                     )

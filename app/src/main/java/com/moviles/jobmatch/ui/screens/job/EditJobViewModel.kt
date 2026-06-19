@@ -58,11 +58,10 @@ class EditJobViewModel : ViewModel() {
                             "proyecto" -> "Proyecto"
                             else -> job.paymentType
                         },
-                        workDate = job.workDate.take(10),
-                        startTime = job.startTime.take(5),
-                        endTime = job.endTime.take(5),
+                        workDate = job.workDate?.take(10) ?: "",
+                        startTime = job.startTime?.take(5) ?: "",
+                        endTime = job.endTime?.take(5) ?: "",
                         skills = job.deliverables
-                            ?.split(",")
                             ?.map { it.trim() }
                             ?.filter { it.isNotEmpty() }
                             ?: emptyList()
@@ -117,7 +116,7 @@ class EditJobViewModel : ViewModel() {
                 title = form.title,
                 description = form.description,
                 payment = amount!!,
-                paymentType = form.paymentType,
+                paymentType = form.paymentType.lowercase(),
                 workDate = form.workDate,
                 startTime = "${form.startTime}:00",
                 endTime = "${form.endTime}:00",
