@@ -24,6 +24,7 @@ import com.moviles.jobmatch.data.remote.model.ContractAcceptResponse
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
+import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
@@ -117,6 +118,12 @@ interface ApiService {
 
     @POST("ratings")
     suspend fun submitRating(@Body request: CreateRatingRequest): Response<RatingResponse>
+
+    @GET("payments")
+    suspend fun getPaymentHistory(
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null
+    ): Response<List<PaymentResponse>>
 
     @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
     suspend fun deleteUser(

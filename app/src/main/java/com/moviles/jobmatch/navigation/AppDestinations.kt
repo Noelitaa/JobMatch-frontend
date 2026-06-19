@@ -38,6 +38,7 @@ object AppDestinations {
         "$STUDENT_PUBLIC_PROFILE/${Uri.encode(studentId)}"
 
     const val AVAILABILITY = "availability"
+    const val PAYMENT_HISTORY = "payment_history"
 
     fun companyProfileRoute(companyId: String): String {
         return "$COMPANY_PROFILE/${Uri.encode(companyId)}"

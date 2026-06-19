@@ -75,8 +75,9 @@ import com.moviles.jobmatch.ui.utils.formatApplicationDate
 @Composable
 fun StudentProfileScreen(
     onSettingsClick: () -> Unit = {},
-    onEditAvailability: () -> Unit = {},   // from this PR
-    onAccountDeleted: () -> Unit = {}      // from PR #66
+    onEditAvailability: () -> Unit = {},
+    onPaymentHistory: () -> Unit = {},
+    onAccountDeleted: () -> Unit = {}
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(
@@ -281,7 +282,7 @@ fun StudentProfileScreen(
                         SectionHeader(
                             title = "Experiencia Reciente",
                             actionText = "Historial",
-                            onActionClick = {}
+                            onActionClick = onPaymentHistory
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
