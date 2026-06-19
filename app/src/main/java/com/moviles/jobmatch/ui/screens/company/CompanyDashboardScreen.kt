@@ -309,7 +309,10 @@ private fun DashboardJobCard(job: Job, onManage: () -> Unit) {
                     ) {
                         StatusBadge(job.status)
                         Text(
-                            "· ${formatJobDate(job.workDate)}",
+                            when (job.type) {
+                                "autonomous" -> "· ${formatJobDate(job.startDate ?: "")}"
+                                else -> "· ${formatJobDate(job.workDate ?: "")}"
+                            },
                             fontSize = 12.sp,
                             color = Color(0xFF8A9BB0)
                         )
