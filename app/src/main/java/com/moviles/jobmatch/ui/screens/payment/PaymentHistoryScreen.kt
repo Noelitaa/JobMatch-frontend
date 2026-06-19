@@ -4,13 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.CallReceived
-import androidx.compose.material.icons.filled.CallMade
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,14 +21,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.AuthSession
-import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DatePickerField
+import com.moviles.jobmatch.ui.components.PaymentCard
 import com.moviles.jobmatch.ui.components.SectionHeader
+import com.moviles.jobmatch.ui.components.formatColones
+import com.moviles.jobmatch.ui.components.formatPaymentMethod
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import com.moviles.jobmatch.ui.utils.formatApplicationDate
-import java.text.NumberFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,7 +134,7 @@ fun PaymentHistoryScreen(
                                 )
                             }
                             items(payments, key = { it.idPayment }) { payment ->
-                                PaymentItem(
+                                PaymentCard(
                                     payment = payment,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                                 )
@@ -253,74 +250,6 @@ private fun FilterRow(
     }
 }
 
-@Composable
-private fun PaymentItem(payment: PaymentResponse, modifier: Modifier = Modifier) {
-    val isReceived = payment.type == "received"
-    val amountColor = if (isReceived) Color(0xFF2E7D32) else Color(0xFFC62828)
-    val amountPrefix = if (isReceived) "+" else "-"
-    val icon = if (isReceived) Icons.Default.CallReceived else Icons.Default.CallMade
-    val iconBg = if (isReceived) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-    val iconTint = if (isReceived) Color(0xFF2E7D32) else Color(0xFFC62828)
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(iconBg),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = payment.concept ?: "Pago de trabajo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A2332)
-                )
-                Text(
-                    text = "REF: JM-${String.format("%05d", payment.idContract)} · ${formatPaymentMethod(payment.paymentMethod)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9AA5B4)
-                )
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "$amountPrefix${formatColones(payment.amount)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = amountColor
-                )
-                Text(
-                    text = formatApplicationDate(payment.date),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9AA5B4)
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -396,15 +325,3 @@ private fun List<PaymentResponse>.groupByDate(): LinkedHashMap<String, List<Paym
     return result
 }
 
-private fun formatColones(amount: Double): String {
-    val format = NumberFormat.getNumberInstance(Locale("es", "CR"))
-    format.maximumFractionDigits = 0
-    return "₡${format.format(amount)}"
-}
-
-private fun formatPaymentMethod(method: String): String = when (method.lowercase()) {
-    "transfer" -> "Transferencia"
-    "cash" -> "Efectivo"
-    "sinpe" -> "SINPE Móvil"
-    else -> method.replaceFirstChar { it.uppercase() }
-}
