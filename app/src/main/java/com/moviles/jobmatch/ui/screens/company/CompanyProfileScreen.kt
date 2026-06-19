@@ -28,6 +28,7 @@ import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.*
+import com.moviles.jobmatch.ui.components.RatingDialog
 import com.moviles.jobmatch.ui.screens.profile.DeleteAccountViewModel
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import com.moviles.jobmatch.ui.utils.formatApplicationDate
@@ -38,7 +39,9 @@ fun CompanyProfileScreen(
     companyId: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {},
+    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
     viewModel: CompanyProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,6 +53,7 @@ fun CompanyProfileScreen(
 
     val isOwnProfile = companyId == AuthSession.currentUser?.userId
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var ratingContractId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(companyId) {
         viewModel.loadCompanyProfile(companyId)
@@ -101,8 +105,11 @@ fun CompanyProfileScreen(
                     company = uiState.company!!,
                     uiState = uiState,
                     isOwnProfile = isOwnProfile,
+                    onPaymentHistory = onPaymentHistory,
                     onDeleteClick = { showDeleteDialog = true },
                     onExpandContract = { viewModel.loadContractDetail(it) },
+                    onMakePayment = onMakePayment,
+                    onRate = { ratingContractId = it },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -122,6 +129,28 @@ fun CompanyProfileScreen(
             }
         )
     }
+
+    val activeRatingId = ratingContractId
+    if (activeRatingId != null) {
+        LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
+            if (activeRatingId in uiState.ratingSuccessIds) {
+                ratingContractId = null
+            }
+        }
+        RatingDialog(
+            title = "Calificar al estudiante",
+            description = "¿Cómo fue la participación del estudiante?",
+            isLoading = activeRatingId in uiState.ratingLoadingIds,
+            errorMessage = uiState.ratingErrors[activeRatingId],
+            onConfirm = { stars, comment ->
+                viewModel.submitRating(activeRatingId, stars, comment)
+            },
+            onDismiss = {
+                ratingContractId = null
+                viewModel.clearRatingError(activeRatingId)
+            }
+        )
+    }
 }
 
 @Composable
@@ -130,8 +159,11 @@ fun CompanyProfileContent(
     uiState: CompanyProfileUiState,
     modifier: Modifier = Modifier,
     isOwnProfile: Boolean = false,
+    onPaymentHistory: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
-    onExpandContract: (Int) -> Unit = {}
+    onExpandContract: (Int) -> Unit = {},
+    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
+    onRate: (Int) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -225,7 +257,8 @@ fun CompanyProfileContent(
                                     detail = uiState.contractDetails[contract.idContract],
                                     isLoadingDetail = contract.idContract in uiState.loadingContractIds,
                                     detailError = uiState.contractDetailErrors[contract.idContract],
-                                    onExpand = { onExpandContract(contract.idContract) }
+                                    onExpand = { onExpandContract(contract.idContract) },
+                                    onMakePayment = onMakePayment
                                 )
                             }
                         }
@@ -233,9 +266,101 @@ fun CompanyProfileContent(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+
+            val activeContracts = uiState.contracts.filter { it.status.equals("active", ignoreCase = true) }
+            if (activeContracts.isNotEmpty()) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    SectionHeader(title = "Calificaciones")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            activeContracts.forEachIndexed { index, contract ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = contract.jobTitle,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF1A1A1A)
+                                        )
+                                        Text(
+                                            text = contract.studentName,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF5A6A7A)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (contract.idContract in uiState.ratingSuccessIds) {
+                                        Text(
+                                            text = "Ya calificado",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF2E7D32),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    } else {
+                                        Surface(
+                                            shape = RoundedCornerShape(20.dp),
+                                            color = Color(0xFFFFC107),
+                                            modifier = Modifier.clickable { onRate(contract.idContract) }
+                                        ) {
+                                            Text(
+                                                text = "Calificar",
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF1A1A1A),
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                if (index < activeContracts.lastIndex) {
+                                    HorizontalDivider(color = Color(0xFFF0F0F0))
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         if (isOwnProfile) {
+            OutlinedButton(
+                onClick = onPaymentHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, DarkBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+            ) {
+                Icon(
+                    Icons.Default.Receipt,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Historial de Pagos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedButton(
                 onClick = onDeleteClick,
                 modifier = Modifier
@@ -264,7 +389,8 @@ private fun CompanyContractCard(
     detail: ContractDetailResponse?,
     isLoadingDetail: Boolean,
     detailError: String?,
-    onExpand: () -> Unit
+    onExpand: () -> Unit,
+    onMakePayment: (Int, String, String, String, Double) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -353,8 +479,10 @@ private fun CompanyContractCard(
                             )
                         }
                         detail != null -> {
-                            val data = detail.parsedContractData
-                            ContractDetailSection(detail = detail)
+                            ContractDetailSection(
+                                detail = detail,
+                                onMakePayment = onMakePayment
+                            )
                         }
                     }
                 }
@@ -364,7 +492,10 @@ private fun CompanyContractCard(
 }
 
 @Composable
-private fun ContractDetailSection(detail: ContractDetailResponse) {
+private fun ContractDetailSection(
+    detail: ContractDetailResponse,
+    onMakePayment: (Int, String, String, String, Double) -> Unit
+) {
     val data = detail.parsedContractData
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!data?.workType.isNullOrEmpty()) {
@@ -411,6 +542,29 @@ private fun ContractDetailSection(detail: ContractDetailResponse) {
                 label = "Aceptado el",
                 value = formatApplicationDate(it)
             )
+        }
+
+        if (detail.status.lowercase() == "active") {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    val compensationValue = data?.compensation?.filter { it.isDigit() || it == '.' }?.toDoubleOrNull() ?: 0.0
+                    onMakePayment(
+                        detail.idJob,
+                        detail.idStudent,
+                        detail.jobTitle,
+                        detail.idContract.toString(),
+                        compensationValue
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+            ) {
+                Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Crear Pago")
+            }
         }
     }
 }

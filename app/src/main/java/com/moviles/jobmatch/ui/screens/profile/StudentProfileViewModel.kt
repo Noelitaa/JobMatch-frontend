@@ -9,8 +9,10 @@ import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
 import com.moviles.jobmatch.data.repository.ApiResult
 import com.moviles.jobmatch.data.repository.ContractRepository
+import com.moviles.jobmatch.data.repository.RatingRepository
 import com.moviles.jobmatch.data.repository.StudentRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,9 @@ data class StudentProfileUiState(
     val loadingContractIds: Set<Int> = emptySet(),
     val acceptingContractIds: Set<Int> = emptySet(),
     val contractAcceptErrors: Map<Int, String> = emptyMap(),
+    val ratingLoadingIds: Set<Int> = emptySet(),
+    val ratingSuccessIds: Set<Int> = emptySet(),
+    val ratingErrors: Map<Int, String> = emptyMap(),
     val contractsErrorMessage: String? = null,
     val errorMessage: String? = null,
     val isUploadingAvatar: Boolean = false,
@@ -40,7 +45,8 @@ data class StudentProfileUiState(
 
 class StudentProfileViewModel(
     private val studentRepository: StudentRepository,
-    private val contractRepository: ContractRepository
+    private val contractRepository: ContractRepository,
+    private val ratingRepository: RatingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentProfileUiState())
@@ -115,6 +121,44 @@ class StudentProfileViewModel(
         }
     }
 
+    fun submitRating(contractId: Int, stars: Int, comment: String?) {
+        if (_uiState.value.ratingLoadingIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    ratingLoadingIds = it.ratingLoadingIds + contractId,
+                    ratingErrors = it.ratingErrors - contractId
+                )
+            }
+            val request = CreateRatingRequest(idContract = contractId, stars = stars, comment = comment)
+            when (val result = ratingRepository.submitRating(request)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        ratingLoadingIds = it.ratingLoadingIds - contractId,
+                        ratingSuccessIds = it.ratingSuccessIds + contractId
+                    )
+                }
+                is ApiResult.Error -> {
+                    if (result.statusCode == 409) {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingSuccessIds = it.ratingSuccessIds + contractId
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingErrors = it.ratingErrors + (contractId to result.message)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun updateDescription(userId: String, description: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isUpdatingDescription = true, descriptionUpdateError = null) }
@@ -140,6 +184,10 @@ class StudentProfileViewModel(
 
     fun clearDescriptionSuccess() {
         _uiState.update { it.copy(descriptionUpdateSuccess = false) }
+    }
+
+    fun clearRatingError(contractId: Int) {
+        _uiState.update { it.copy(ratingErrors = it.ratingErrors - contractId) }
     }
 
     fun acceptContract(contractId: Int) {
@@ -179,12 +227,13 @@ class StudentProfileViewModel(
 
 class StudentProfileViewModelFactory(
     private val studentRepository: StudentRepository,
-    private val contractRepository: ContractRepository
+    private val contractRepository: ContractRepository,
+    private val ratingRepository: RatingRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(StudentProfileViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return StudentProfileViewModel(studentRepository, contractRepository) as T
+            return StudentProfileViewModel(studentRepository, contractRepository, ratingRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

@@ -80,6 +80,7 @@ import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
+import com.moviles.jobmatch.ui.components.RatingDialog
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
 import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.components.SkillChip
@@ -96,12 +97,17 @@ fun StudentProfileScreen(
     onEditSkills: (studentId: String, currentSkills: List<StudentSkillResponse>) -> Unit = { _, _ -> },
     onSettingsClick: () -> Unit = {},
     onEditAvailability: () -> Unit = {},
+    onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
     val viewModel: StudentProfileViewModel = viewModel(
-        factory = StudentProfileViewModelFactory(AppContainer.studentRepository, AppContainer.contractRepository)
+        factory = StudentProfileViewModelFactory(
+            AppContainer.studentRepository,
+            AppContainer.contractRepository,
+            AppContainer.ratingRepository
+        )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val student = uiState.student
@@ -154,6 +160,7 @@ fun StudentProfileScreen(
     val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var ratingContractId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(deleteUiState.isDeleted) {
         if (deleteUiState.isDeleted) onAccountDeleted()
@@ -371,7 +378,7 @@ fun StudentProfileScreen(
                         SectionHeader(
                             title = "Experiencia Reciente",
                             actionText = "Historial",
-                            onActionClick = {}
+                            onActionClick = onPaymentHistory
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -435,6 +442,74 @@ fun StudentProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Calificaciones ---
+                    val activeContracts = contracts.filter { it.status.equals("active", ignoreCase = true) }
+                    if (activeContracts.isNotEmpty()) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            SectionHeader(title = "Calificaciones")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    activeContracts.forEachIndexed { index, contract ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = contract.jobTitle,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color(0xFF1A2332)
+                                                )
+                                                Text(
+                                                    text = contract.companyName,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(0xFF5A6A7A)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            if (contract.idContract in uiState.ratingSuccessIds) {
+                                                Text(
+                                                    text = "Ya calificado",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(0xFF388E3C),
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            } else {
+                                                Surface(
+                                                    shape = RoundedCornerShape(20.dp),
+                                                    color = Color(0xFFFFC107),
+                                                    modifier = Modifier.clickable { ratingContractId = contract.idContract }
+                                                ) {
+                                                    Text(
+                                                        text = "Calificar",
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color(0xFF1A2332),
+                                                        fontSize = 11.sp
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (index < activeContracts.lastIndex) {
+                                            HorizontalDivider(color = Color(0xFFF0F2F5))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
                     // --- Footer ---
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -625,6 +700,28 @@ fun StudentProfileScreen(
             onDismiss = {
                 showDeleteDialog = false
                 deleteViewModel.clearError()
+            }
+        )
+    }
+
+    val activeRatingId = ratingContractId
+    if (activeRatingId != null) {
+        LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
+            if (activeRatingId in uiState.ratingSuccessIds) {
+                ratingContractId = null
+            }
+        }
+        RatingDialog(
+            title = "Calificar a la empresa",
+            description = "¿Cómo fue tu experiencia con la empresa?",
+            isLoading = activeRatingId in uiState.ratingLoadingIds,
+            errorMessage = uiState.ratingErrors[activeRatingId],
+            onConfirm = { stars, comment ->
+                viewModel.submitRating(activeRatingId, stars, comment)
+            },
+            onDismiss = {
+                ratingContractId = null
+                viewModel.clearRatingError(activeRatingId)
             }
         )
     }
@@ -920,6 +1017,7 @@ private fun ContractCard(
                                         }
                                     }
                                 }
+
                             }
                         }
                     }

@@ -26,7 +26,12 @@ import com.moviles.jobmatch.data.remote.model.ContractAcceptResponse
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
+import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
+import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
+import com.moviles.jobmatch.data.remote.model.RatingResponse
 import com.moviles.jobmatch.data.remote.model.UpdateDescriptionRequest
 import com.moviles.jobmatch.data.remote.model.UserProfileResponse
 import okhttp3.MultipartBody
@@ -133,6 +138,15 @@ interface ApiService {
     @PUT("contracts/{contractId}/accept")
     suspend fun acceptContract(@Path("contractId") contractId: Int): Response<ContractAcceptResponse>
 
+    @POST("ratings")
+    suspend fun submitRating(@Body request: CreateRatingRequest): Response<RatingResponse>
+
+    @GET("payments")
+    suspend fun getPaymentHistory(
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null
+    ): Response<List<PaymentResponse>>
+
     @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
     suspend fun deleteUser(
         @Path("userId") userId: String,
@@ -151,4 +165,9 @@ interface ApiService {
         @Path("userId") userId: String,
         @Body request: UpdateDescriptionRequest
     ): Response<UserProfileResponse>
+
+    @POST("payments")
+    suspend fun createPayment(
+        @Body request: CreatePaymentRequest
+    ): Response<CreatePaymentResponse>
 }

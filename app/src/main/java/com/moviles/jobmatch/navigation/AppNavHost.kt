@@ -41,6 +41,8 @@ import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.SkillSelectionScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
+import com.moviles.jobmatch.ui.screens.payment.MakePaymentScreen
+import com.moviles.jobmatch.ui.screens.payment.PaymentHistoryScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -56,6 +58,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val showBottomBar = currentRoute != AppDestinations.SPLASH &&
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.REGISTER &&
+            currentRoute != AppDestinations.PAYMENT_HISTORY &&
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
             currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
@@ -198,6 +201,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
                     },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
+                    },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
@@ -217,6 +223,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     },
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
                     },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
@@ -246,10 +255,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 CompanyProfileScreen(
                     companyId = id,
                     onBackPressed = { navController.popBackStack() },
+                    onPaymentHistory = { navController.navigate(AppDestinations.PAYMENT_HISTORY) },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onMakePayment = { jobId, studentId, jobTitle, contractNumber, amount ->
+                        navController.navigate(
+                            AppDestinations.makePaymentRoute(
+                                jobId, studentId, jobTitle, contractNumber, amount
+                            )
+                        )
                     }
                 )
             }
@@ -328,6 +345,32 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(
+                route = "${AppDestinations.MAKE_PAYMENT}/{jobId}/{studentId}/{jobTitle}/{contractNumber}/{amount}",
+                arguments = listOf(
+                    navArgument("jobId")          { type = NavType.IntType },
+                    navArgument("studentId")      { type = NavType.StringType },
+                    navArgument("jobTitle")       { type = NavType.StringType },
+                    navArgument("contractNumber") { type = NavType.StringType },
+                    navArgument("amount")         { type = NavType.FloatType }
+                )
+            ) { backStackEntry ->
+                val jobId          = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val studentId      = backStackEntry.arguments?.getString("studentId").orEmpty()
+                val jobTitle       = backStackEntry.arguments?.getString("jobTitle").orEmpty()
+                val contractNumber = backStackEntry.arguments?.getString("contractNumber").orEmpty()
+                val amount         = backStackEntry.arguments?.getFloat("amount")?.toDouble() ?: 0.0
+                MakePaymentScreen(
+                    jobId          = jobId,
+                    studentId      = studentId,
+                    jobTitle       = jobTitle,
+                    contractNumber = contractNumber,
+                    amount         = amount,
+                    onBackPressed  = { navController.popBackStack() },
+                    onPaymentSuccess = { navController.popBackStack() }
+                )
+            }
+
+            composable(
                 route = "${AppDestinations.APPLICATION_DETAIL}/{applicationId}/{jobId}/{jobTitle}/{studentId}/{studentName}/{studentEmail}/{status}/{createdAt}",
                 arguments = listOf(
                     navArgument("applicationId") { type = NavType.IntType },
@@ -397,6 +440,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 AvailabilityScreen(
                     onBackPressed = { navController.popBackStack() },
                     onSaved = { navController.popBackStack() }
+                )
+            }
+
+            composable(route = AppDestinations.PAYMENT_HISTORY) {
+                PaymentHistoryScreen(
+                    onBackPressed = { navController.popBackStack() }
                 )
             }
         }
