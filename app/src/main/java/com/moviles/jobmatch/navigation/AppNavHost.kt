@@ -31,6 +31,7 @@ import com.moviles.jobmatch.ui.screens.profile.StudentPublicProfileScreen
 import com.moviles.jobmatch.ui.screens.job.JobDetailScreen
 import com.moviles.jobmatch.ui.screens.job.JobsScreen
 import com.moviles.jobmatch.ui.screens.job.JobsViewModel
+import com.moviles.jobmatch.ui.screens.job.StudentDashboardScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
@@ -102,7 +103,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         val destination = if (AuthSession.isCompany)
                             AppDestinations.COMPANY_DASHBOARD
                         else
-                            AppDestinations.JOBS_EXPLORE
+                            AppDestinations.SEARCH_COMPANY
                         navController.navigate(destination) {
                             popUpTo(AppDestinations.LOGIN) { inclusive = true }
                         }
@@ -130,7 +131,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(route = AppDestinations.SEARCH_COMPANY) {
-                PlaceholderScreen("Inicio")
+                if (AuthSession.isCompany) {
+                    PlaceholderScreen("Inicio")
+                } else {
+                    StudentDashboardScreen(
+                        onJobClick = { jobId ->
+                            navController.navigate(AppDestinations.jobDetailRoute(jobId))
+                        }
+                    )
+                }
             }
 
             composable(route = AppDestinations.JOBS_EXPLORE) {
