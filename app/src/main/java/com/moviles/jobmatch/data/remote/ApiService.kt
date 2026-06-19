@@ -19,10 +19,12 @@ import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.ContractAcceptResponse
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
+import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -79,6 +81,17 @@ interface ApiService {
     suspend fun getStudentProfile(
         @Path("studentId") studentId: String
     ): Response<StudentProfileResponse>
+
+    @GET("students/{studentId}/availability")
+    suspend fun getAvailability(
+        @Path("studentId") studentId: String
+    ): Response<AvailabilityResponse>
+
+    @PUT("students/{studentId}/availability")
+    suspend fun updateAvailability(
+        @Path("studentId") studentId: String,
+        @Body body: UpdateAvailabilityRequest
+    ): Response<Unit>
 
     @GET("contracts/student")
     suspend fun getStudentContracts(): Response<List<ContractListResponse>>

@@ -35,6 +35,7 @@ import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
+import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -171,26 +172,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 PlaceholderScreen("Alertas")
             }
 
-            composable(route = AppDestinations.PROFILE) {
-                StudentProfileScreen(
-                    onAccountDeleted = {
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
-            }
-
-            composable(route = AppDestinations.STUDENT_PROFILE) {
-                StudentProfileScreen(
-                    onAccountDeleted = {
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
-            }
-
             composable(
                 route = AppDestinations.CREATE_JOB,
                 arguments = listOf(navArgument("companyId") { type = NavType.StringType })
@@ -291,6 +272,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     }
                 )
             }
+
             composable(
                 route = "${AppDestinations.APPLICATION_DETAIL}/{applicationId}/{jobId}/{jobTitle}/{studentId}/{studentName}/{studentEmail}/{status}/{createdAt}",
                 arguments = listOf(
@@ -329,6 +311,39 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 StudentPublicProfileScreen(
                     studentId = studentId,
                     onBackPressed = { navController.popBackStack() }
+                )
+            }
+
+            composable(route = AppDestinations.PROFILE) {
+                StudentProfileScreen(
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(route = AppDestinations.STUDENT_PROFILE) {
+                StudentProfileScreen(
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(route = AppDestinations.AVAILABILITY) {
+                AvailabilityScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
                 )
             }
         }
