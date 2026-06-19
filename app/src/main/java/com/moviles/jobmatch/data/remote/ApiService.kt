@@ -84,7 +84,7 @@ interface ApiService {
     @GET("contracts/student")
     suspend fun getStudentContracts(): Response<List<ContractListResponse>>
 
-    @GET("contracts/company")
+    @GET("contracts")
     suspend fun getCompanyContracts(
         @Query("status") status: String? = null
     ): Response<List<ContractListResponse>>

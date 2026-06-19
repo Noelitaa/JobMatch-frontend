@@ -208,7 +208,7 @@ private fun ProfileContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         student.skills.forEach { skill ->
-                            SkillChip(text = skill)
+                            SkillChip(text = skill.skillName)
                         }
                     }
                 }

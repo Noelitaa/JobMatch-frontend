@@ -229,7 +229,7 @@ fun StudentProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                skills.forEach { skill -> SkillChip(skill) }
+                                skills.forEach { skill -> SkillChip(skill.skillName) }
                             }
                         } else {
                             Text(
