@@ -108,7 +108,7 @@ fun JobDetailScreen(
                     )
                 } else {
                     val hasApplied = applyState is ApplyState.Success || 
-                        (uiState as? JobDetailUiState.Success)?.job?.status?.lowercase() == "applied"
+                        applyState is ApplyState.AlreadyApplied
                     
                     JobDetailBottomBar(
                         isApplying = applyState is ApplyState.Loading,

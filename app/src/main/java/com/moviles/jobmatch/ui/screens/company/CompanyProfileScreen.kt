@@ -53,6 +53,7 @@ fun CompanyProfileScreen(
 
     val isOwnProfile = companyId == AuthSession.currentUser?.userId
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(companyId) {
         viewModel.loadCompanyProfile(companyId)
@@ -67,7 +68,7 @@ fun CompanyProfileScreen(
             JobMatchTopBar(
                 title = "Perfil de Empresa",
                 onBackPressed = onBackPressed,
-                onSettingsPressed = onLogout // Changed to logout as per request
+                onSettingsPressed = { if (isOwnProfile) showLogoutDialog = true }
             )
         }
     ) { paddingValues ->
@@ -125,6 +126,16 @@ fun CompanyProfileScreen(
                 showDeleteDialog = false
                 deleteViewModel.clearError()
             }
+        )
+    }
+
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onDismiss = { showLogoutDialog = false }
         )
     }
 }

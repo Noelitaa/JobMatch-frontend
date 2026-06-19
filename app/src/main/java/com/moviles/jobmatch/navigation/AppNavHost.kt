@@ -368,6 +368,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.PROFILE) {
                 StudentProfileScreen(
+                    onLogout = {
+                        AuthSession.clear()
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
                     },
@@ -384,6 +390,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.STUDENT_PROFILE) {
                 StudentProfileScreen(
+                    onLogout = {
+                        AuthSession.clear()
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
                     onEditAvailability = {
                         navController.navigate(AppDestinations.AVAILABILITY)
                     },

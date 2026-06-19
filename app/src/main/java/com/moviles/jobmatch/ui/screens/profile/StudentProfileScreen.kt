@@ -64,6 +64,7 @@ import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
+import com.moviles.jobmatch.ui.components.LogoutConfirmationDialog
 import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.components.StatCard
@@ -74,6 +75,7 @@ import com.moviles.jobmatch.ui.utils.formatApplicationDate
 @Composable
 fun StudentProfileScreen(
     onSettingsClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
     onEditAvailability: () -> Unit = {},
     onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {}
@@ -89,6 +91,7 @@ fun StudentProfileScreen(
     val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
@@ -103,7 +106,7 @@ fun StudentProfileScreen(
             JobMatchTopBar(
                 title = "Mi Perfil",
                 showBackButton = false,
-                onSettingsPressed = onSettingsClick
+                onSettingsPressed = { showLogoutDialog = true }
             )
         },
         containerColor = Color(0xFFF5F7FA),
@@ -384,6 +387,16 @@ fun StudentProfileScreen(
                 showDeleteDialog = false
                 deleteViewModel.clearError()
             }
+        )
+    }
+
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onDismiss = { showLogoutDialog = false }
         )
     }
 }

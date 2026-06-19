@@ -198,20 +198,6 @@ private fun CompanyHeaderCard(companyName: String) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color(0xFF4CAF50),
-                        modifier = Modifier.size(7.dp)
-                    ) {}
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        "San José, Costa Rica", // Removed hardcoded "PYME" text
-                        fontSize = 12.sp,
-                        color = Color(0xFF5A6A7A)
-                    )
-                }
             }
         }
     }
