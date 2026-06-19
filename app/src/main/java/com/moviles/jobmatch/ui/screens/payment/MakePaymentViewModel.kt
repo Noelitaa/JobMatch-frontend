@@ -58,7 +58,12 @@ class MakePaymentViewModel(
 
     // Called from the screen to seed job/contract data
     fun initWithJob(jobId: Int, studentId: String, jobTitle: String, amount: Double, contractNumber: String) {
-        currentContractId = contractNumber.toIntOrNull() ?: 0
+        val parsedContractId = contractNumber.toIntOrNull()
+        if (parsedContractId == null) {
+            _uiState.update { it.copy(errorMessage = "Error: ID de contrato no válido ($contractNumber)") }
+            return
+        }
+        currentContractId = parsedContractId
         val commission = amount * 0.06
         _uiState.update {
             it.copy(
@@ -77,15 +82,17 @@ class MakePaymentViewModel(
     // --- field updaters ---
 
     fun onAmountChanged(v: String) {
+        // Allow only digits to match toLong behavior, or confirm if decimal is needed. 
+        // For now, keeping digits only as requested for simple entry.
         val filtered = v.filter { it.isDigit() }
-        val amount = filtered.toDoubleOrNull() ?: 0.0
-        val commission = amount * 0.06
+        val amountValue = filtered.toDoubleOrNull() ?: 0.0
+        val commissionValue = amountValue * 0.06
         _uiState.update {
             it.copy(
                 amountString = filtered,
-                amount = amount,
-                subtotal = amount - commission,
-                commission = commission
+                amount = amountValue,
+                subtotal = amountValue - commissionValue,
+                commission = commissionValue
             )
         }
     }

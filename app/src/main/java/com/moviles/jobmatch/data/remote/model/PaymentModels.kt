@@ -8,12 +8,14 @@ data class CreatePaymentRequest(
     val receipt: String               // URL or detail
 )
 
-// Response from POST /payments
+// Response from POST /payments matching PaymentResponse from Backend
 data class CreatePaymentResponse(
     val idPayment: Int,
     val idContract: Int,
     val amount: Double,
     val paymentMethod: String,
-    val status: String,               // "COMPLETED", "PENDING"
-    val createdAt: String
+    val date: String,
+    val type: String,
+    val receiptUrl: String?,
+    val concept: String?
 )

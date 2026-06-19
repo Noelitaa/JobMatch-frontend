@@ -12,22 +12,25 @@ class PaymentRepository(private val apiService: ApiService) {
     ): ApiResult<CreatePaymentResponse> {
         return try {
             val response = apiService.createPayment(request)
-            when {
-                response.isSuccessful && response.body() != null ->
-                    ApiResult.Success(response.body()!!)
-                response.code() == 400 ->
-                    ApiResult.Error("Invalid payment data", 400)
-                response.code() == 401 ->
-                    ApiResult.Error("Unauthorized", 401)
-                response.code() == 404 ->
-                    ApiResult.Error("Job or student not found", 404)
-                else ->
-                    ApiResult.Error("Server error (${response.code()})", response.code())
+            if (response.isSuccessful && response.body() != null) {
+                ApiResult.Success(response.body()!!)
+            } else {
+                val message = parseErrorBody(response) ?: "Error al procesar el pago (${response.code()})"
+                ApiResult.Error(message, response.code())
             }
         } catch (e: IOException) {
-            ApiResult.Error("Could not connect to server")
+            ApiResult.Error("No se pudo conectar al servidor")
         } catch (e: Exception) {
-            ApiResult.Error(e.message ?: "Unexpected error")
+            ApiResult.Error(e.message ?: "Error inesperado")
+        }
+    }
+
+    private fun parseErrorBody(response: retrofit2.Response<*>): String? {
+        return try {
+            val body = response.errorBody()?.string() ?: return null
+            org.json.JSONObject(body).optString("message").takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            null
         }
     }
 }
