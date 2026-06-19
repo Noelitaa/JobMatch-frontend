@@ -107,8 +107,12 @@ fun JobDetailScreen(
                         onEdit = { onEditJob(job.idJob) }
                     )
                 } else {
+                    val hasApplied = applyState is ApplyState.Success || 
+                        (uiState as? JobDetailUiState.Success)?.job?.status?.lowercase() == "applied"
+                    
                     JobDetailBottomBar(
                         isApplying = applyState is ApplyState.Loading,
+                        hasApplied = hasApplied,
                         onApply = { viewModel.applyToJob(job.idJob) }
                     )
                 }
@@ -843,6 +847,7 @@ private fun TrustCard() {
 @Composable
 private fun JobDetailBottomBar(
     isApplying: Boolean = false,
+    hasApplied: Boolean = false,
     onApply: () -> Unit = {}
 ) {
     Surface(
@@ -857,28 +862,19 @@ private fun JobDetailBottomBar(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedButton(
-                onClick = {},
-                modifier = Modifier.height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.5.dp, DarkBlue),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bookmark,
-                    contentDescription = "Guardar",
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            // Saved button removed as per UI request
 
             Button(
                 onClick = onApply,
-                enabled = !isApplying,
+                enabled = !isApplying && !hasApplied,
                 modifier = Modifier
                     .weight(1f)
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (hasApplied) Color(0xFF4CAF50) else DarkBlue,
+                    disabledContainerColor = if (hasApplied) Color(0xFFE8F5E9) else Color.LightGray
+                )
             ) {
                 if (isApplying) {
                     CircularProgressIndicator(
@@ -888,16 +884,27 @@ private fun JobDetailBottomBar(
                     )
                 } else {
                     Text(
-                        text = "Postularse Ahora",
+                        text = if (hasApplied) "Postulado" else "Postularse Ahora",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        color = if (hasApplied) Color(0xFF2E7D32) else Color.White
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    if (!hasApplied) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = Color(0xFF2E7D32)
+                        )
+                    }
                 }
             }
         }

@@ -204,6 +204,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 CompanyProfileScreen(
                     companyId = id,
                     onBackPressed = { navController.popBackStack() },
+                    onLogout = {
+                        AuthSession.clear()
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
                     onPaymentHistory = { navController.navigate(AppDestinations.PAYMENT_HISTORY) },
                     onAccountDeleted = {
                         navController.navigate(AppDestinations.LOGIN) {

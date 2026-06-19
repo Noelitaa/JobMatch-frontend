@@ -38,6 +38,7 @@ fun CompanyProfileScreen(
     companyId: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    onLogout: () -> Unit = {},
     onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {},
     onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
@@ -66,7 +67,7 @@ fun CompanyProfileScreen(
             JobMatchTopBar(
                 title = "Perfil de Empresa",
                 onBackPressed = onBackPressed,
-                onSettingsPressed = onSettingsPressed
+                onSettingsPressed = onLogout // Changed to logout as per request
             )
         }
     ) { paddingValues ->

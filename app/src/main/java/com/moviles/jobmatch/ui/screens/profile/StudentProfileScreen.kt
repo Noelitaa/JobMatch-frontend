@@ -90,6 +90,10 @@ fun StudentProfileScreen(
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile()
+    }
+
     LaunchedEffect(deleteUiState.isDeleted) {
         if (deleteUiState.isDeleted) onAccountDeleted()
     }
@@ -169,35 +173,7 @@ fun StudentProfileScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // --- Estadísticas ---
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        StatCard(
-                            icon = Icons.Default.Timer,
-                            value = "--",
-                            label = "PUNTUALIDAD",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.TrendingUp,
-                            value = "--",
-                            label = "GANANCIAS",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.EmojiEvents,
-                            value = "--",
-                            label = "INSIGNIAS",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    // --- Estadísticas removed as per UI requirements ---
 
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SectionHeader(title = "Sobre mí")
