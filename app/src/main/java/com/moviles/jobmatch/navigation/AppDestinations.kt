@@ -21,6 +21,8 @@ object AppDestinations {
     const val STUDENT_PUBLIC_PROFILE = "student_public_profile"
     const val APPLICATION_DETAIL = "application_detail"
 
+    const val MAKE_PAYMENT = "make_payment"
+
     fun applicationDetailRoute(
         applicationId: Int,
         jobId: Int,
@@ -48,4 +50,12 @@ object AppDestinations {
     fun editJobRoute(jobId: Int): String = "$EDIT_JOB/$jobId"
     fun applicationsRoute(jobId: Int, jobTitle: String): String =
         "$APPLICATIONS/$jobId/${Uri.encode(jobTitle)}"
+
+    fun makePaymentRoute(
+        jobId: Int,
+        studentId: String,
+        jobTitle: String,
+        contractNumber: String,
+        amount: Double
+    ): String = "make_payment/$jobId/${Uri.encode(studentId)}/${Uri.encode(jobTitle)}/${Uri.encode(contractNumber)}/$amount"
 }

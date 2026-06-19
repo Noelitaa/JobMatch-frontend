@@ -30,7 +30,8 @@ fun JobMatchTextField(
     label: String = "",
     trailingIcon: @Composable (() -> Unit)? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    isError: Boolean = false
 ) {
     Column(modifier = modifier) {
         if (label.isNotEmpty()) {
@@ -55,11 +56,12 @@ fun JobMatchTextField(
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
-                    tint = Color.Gray
+                    tint = if (isError) MaterialTheme.colorScheme.error else Color.Gray
                 )
             },
             trailingIcon = trailingIcon,
             visualTransformation = visualTransformation,
+            isError = isError,
             keyboardOptions = keyboardOptions,
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -68,6 +70,7 @@ fun JobMatchTextField(
                 unfocusedBorderColor = Color.LightGray,
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
+                errorBorderColor = MaterialTheme.colorScheme.error,
                 cursorColor = DarkBlue
             ),
             modifier = Modifier.fillMaxWidth()

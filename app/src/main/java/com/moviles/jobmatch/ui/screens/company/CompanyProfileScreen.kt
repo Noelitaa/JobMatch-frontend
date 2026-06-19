@@ -39,6 +39,7 @@ fun CompanyProfileScreen(
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
     onAccountDeleted: () -> Unit = {},
+    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
     viewModel: CompanyProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -103,6 +104,7 @@ fun CompanyProfileScreen(
                     isOwnProfile = isOwnProfile,
                     onDeleteClick = { showDeleteDialog = true },
                     onExpandContract = { viewModel.loadContractDetail(it) },
+                    onMakePayment = onMakePayment,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -131,7 +133,8 @@ fun CompanyProfileContent(
     modifier: Modifier = Modifier,
     isOwnProfile: Boolean = false,
     onDeleteClick: () -> Unit = {},
-    onExpandContract: (Int) -> Unit = {}
+    onExpandContract: (Int) -> Unit = {},
+    onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> }
 ) {
     Column(
         modifier = modifier
@@ -225,7 +228,8 @@ fun CompanyProfileContent(
                                     detail = uiState.contractDetails[contract.idContract],
                                     isLoadingDetail = contract.idContract in uiState.loadingContractIds,
                                     detailError = uiState.contractDetailErrors[contract.idContract],
-                                    onExpand = { onExpandContract(contract.idContract) }
+                                    onExpand = { onExpandContract(contract.idContract) },
+                                    onMakePayment = onMakePayment
                                 )
                             }
                         }
@@ -264,7 +268,8 @@ private fun CompanyContractCard(
     detail: ContractDetailResponse?,
     isLoadingDetail: Boolean,
     detailError: String?,
-    onExpand: () -> Unit
+    onExpand: () -> Unit,
+    onMakePayment: (Int, String, String, String, Double) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -353,8 +358,10 @@ private fun CompanyContractCard(
                             )
                         }
                         detail != null -> {
-                            val data = detail.parsedContractData
-                            ContractDetailSection(detail = detail)
+                            ContractDetailSection(
+                                detail = detail,
+                                onMakePayment = onMakePayment
+                            )
                         }
                     }
                 }
@@ -364,7 +371,10 @@ private fun CompanyContractCard(
 }
 
 @Composable
-private fun ContractDetailSection(detail: ContractDetailResponse) {
+private fun ContractDetailSection(
+    detail: ContractDetailResponse,
+    onMakePayment: (Int, String, String, String, Double) -> Unit
+) {
     val data = detail.parsedContractData
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!data?.workType.isNullOrEmpty()) {
@@ -411,6 +421,29 @@ private fun ContractDetailSection(detail: ContractDetailResponse) {
                 label = "Aceptado el",
                 value = formatApplicationDate(it)
             )
+        }
+
+        if (detail.status.lowercase() == "active") {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    val compensationValue = data?.compensation?.filter { it.isDigit() || it == '.' }?.toDoubleOrNull() ?: 0.0
+                    onMakePayment(
+                        detail.idJob,
+                        detail.idStudent,
+                        detail.jobTitle,
+                        detail.idContract.toString(),
+                        compensationValue
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+            ) {
+                Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Crear Pago")
+            }
         }
     }
 }
