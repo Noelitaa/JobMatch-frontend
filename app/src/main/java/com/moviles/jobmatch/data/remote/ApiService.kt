@@ -27,6 +27,7 @@ import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
+import com.moviles.jobmatch.data.remote.model.RegisterFcmTokenRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -123,4 +124,10 @@ interface ApiService {
     suspend fun createPayment(
         @Body request: CreatePaymentRequest
     ): Response<CreatePaymentResponse>
+
+    @POST("notifications/token")
+    suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<Unit>
+
+    @DELETE("notifications/token/{token}")
+    suspend fun deleteFcmToken(@Path("token") token: String): Response<Unit>
 }

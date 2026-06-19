@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.NotificationHandler
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
@@ -44,6 +46,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Navigate to the screen indicated by a notification tap
+    LaunchedEffect(Unit) {
+        NotificationHandler.consume()?.let { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     val bottomBarRoute = when {
         currentRoute == AppDestinations.COMPANY_DASHBOARD -> AppDestinations.SEARCH_COMPANY
