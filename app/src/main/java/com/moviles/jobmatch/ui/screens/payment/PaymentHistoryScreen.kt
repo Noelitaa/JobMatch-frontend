@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.repository.AppContainer
+import java.util.Locale
 import com.moviles.jobmatch.ui.components.DateRangePickerDialog
 import com.moviles.jobmatch.ui.components.PaymentCard
 import com.moviles.jobmatch.ui.components.SectionHeader
