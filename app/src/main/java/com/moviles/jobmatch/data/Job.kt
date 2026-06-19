@@ -15,5 +15,6 @@ data class Job(
     val startDate: String? = null,
     val endDate: String? = null,
     val deliverables: List<String>? = null,
+    val skillsRequired: List<String>? = null,
     val createdAt: String = ""
 )

@@ -27,6 +27,23 @@ class JobRepository(private val apiService: ApiService) {
         }
     }
 
+    suspend fun getRecommendedJobs(): ApiResult<List<Job>> {
+        return try {
+            val response = apiService.getRecommendedJobs()
+            if (response.isSuccessful && response.body() != null) {
+                ApiResult.Success(response.body()!!)
+            } else if (response.code() == 404) {
+                ApiResult.Error("Estudiante no encontrado", 404)
+            } else {
+                ApiResult.Error("Error al cargar recomendaciones (${response.code()})", response.code())
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("No se pudo conectar al servidor")
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error inesperado")
+        }
+    }
+
     suspend fun getJobs(): ApiResult<List<Job>> {
         return try {
             val response = apiService.getAllJobs()
