@@ -9,9 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -173,11 +176,26 @@ private fun PaymentMethodCard(method: PaymentMethod, selected: Boolean, onClick:
 @Composable
 private fun PaymentForm(amount: String, onAmountChange: (String) -> Unit, receipt: String, onReceiptChange: (String) -> Unit, amountError: String?, receiptError: String?, method: String) {
     FormSection("Detalles del Pago ($method)") {
-        JobMatchTextField(value = amount, onValueChange = onAmountChange, placeholder = "0", label = "Monto a pagar (₡)", leadingIcon = Icons.Default.Check, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-        if (amountError != null) Text(amountError, color = Color.Red, fontSize = 11.sp)
+        JobMatchTextField(
+            value = amount,
+            onValueChange = onAmountChange,
+            placeholder = "0",
+            label = "Monto a pagar (₡)",
+            leadingIcon = Icons.Default.AttachMoney,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = amountError != null
+        )
+        if (amountError != null) Text(amountError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp, top = 2.dp))
         Spacer(Modifier.height(12.dp))
-        JobMatchTextField(value = receipt, onValueChange = onReceiptChange, placeholder = "Número de transacción o URL", label = "Referencia / Comprobante", leadingIcon = Icons.Default.Check)
-        if (receiptError != null) Text(receiptError, color = Color.Red, fontSize = 11.sp)
+        JobMatchTextField(
+            value = receipt,
+            onValueChange = onReceiptChange,
+            placeholder = "Número de transacción o URL",
+            label = "Referencia / Comprobante",
+            leadingIcon = Icons.Default.Receipt,
+            isError = receiptError != null
+        )
+        if (receiptError != null) Text(receiptError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp, top = 2.dp))
     }
 }
 
@@ -201,6 +219,8 @@ private fun PaymentConfirmSection(isLoading: Boolean, amount: Double, onConfirm:
         JobMatchButton(text = if (isLoading) "Procesando…" else "Confirmar y Pagar ${formatColones(amount)}", onClick = onConfirm, enabled = !isLoading)
         Spacer(Modifier.height(10.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Lock, null, tint = TextMuted, modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(4.dp))
             Text("TRANSACCIÓN SEGURA SSL", fontSize = 10.sp, color = TextMuted, letterSpacing = 0.8.sp, fontWeight = FontWeight.Medium)
         }
     }
