@@ -57,6 +57,26 @@ class ContractRepository(private val apiService: ApiService) {
         }
     }
 
+    suspend fun getCompanyContracts(status: String? = null): ApiResult<List<ContractListResponse>> {
+        return try {
+            val response = apiService.getCompanyContracts(status)
+            when {
+                response.isSuccessful && response.body() != null ->
+                    ApiResult.Success(response.body()!!)
+                response.code() == 401 ->
+                    ApiResult.Error("No autorizado", 401)
+                response.code() == 403 ->
+                    ApiResult.Error("Acceso denegado", 403)
+                else ->
+                    ApiResult.Error("Error al cargar contratos (${response.code()})", response.code())
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("No se pudo conectar al servidor")
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error inesperado")
+        }
+    }
+
     suspend fun acceptContract(contractId: Int): ApiResult<ContractAcceptResponse> {
         return try {
             val response = apiService.acceptContract(contractId)

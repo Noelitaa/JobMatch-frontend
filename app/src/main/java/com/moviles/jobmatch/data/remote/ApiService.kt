@@ -33,6 +33,7 @@ import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST(AppConstants.Api.Paths.AUTH_LOGIN)
@@ -95,6 +96,11 @@ interface ApiService {
 
     @GET("contracts/student")
     suspend fun getStudentContracts(): Response<List<ContractListResponse>>
+
+    @GET("contracts")
+    suspend fun getCompanyContracts(
+        @Query("status") status: String? = null
+    ): Response<List<ContractListResponse>>
 
     @GET("contracts/{contractId}")
     suspend fun getContractById(@Path("contractId") contractId: Int): Response<ContractDetailResponse>

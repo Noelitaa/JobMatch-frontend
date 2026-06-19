@@ -34,13 +34,18 @@ data class UserProfileResponse(
 data class UpdateAvailabilityRequest(
     val timeBlocks: List<TimeBlockRequest>
 )
+
+data class SkillResponse(
+    val skillId: String,
+    val skillName: String
+)
 data class StudentProfileResponse(
     val id: String,
     val user: UserProfileResponse,
     val university: String,
     val career: String,
     val studentId: String,
-    val skills: List<String>,
+    val skills: List<SkillResponse>,
     val availability: AvailabilityResponse?,
     val averageRating: Float
 )
