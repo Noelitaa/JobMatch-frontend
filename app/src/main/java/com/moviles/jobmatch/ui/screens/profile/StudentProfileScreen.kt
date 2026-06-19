@@ -59,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
+import com.moviles.jobmatch.navigation.AppDestinations
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
@@ -73,7 +74,8 @@ import com.moviles.jobmatch.ui.utils.formatApplicationDate
 @Composable
 fun StudentProfileScreen(
     onSettingsClick: () -> Unit = {},
-    onAccountDeleted: () -> Unit = {}
+    onEditAvailability: () -> Unit = {},   // from this PR
+    onAccountDeleted: () -> Unit = {}      // from PR #66
 ) {
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(AppContainer.studentRepository, AppContainer.contractRepository)
@@ -195,7 +197,7 @@ fun StudentProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // --- Sobre mí ---
+
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SectionHeader(title = "Sobre mí")
                         Spacer(modifier = Modifier.height(8.dp))
@@ -247,7 +249,7 @@ fun StudentProfileScreen(
                         SectionHeader(
                             title = "Disponibilidad",
                             actionText = "Editar",
-                            onActionClick = {}
+                            onActionClick = onEditAvailability
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
