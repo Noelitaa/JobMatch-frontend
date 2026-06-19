@@ -22,13 +22,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.AuthSession
 import com.moviles.jobmatch.data.repository.AppContainer
-import com.moviles.jobmatch.ui.components.DatePickerField
+import com.moviles.jobmatch.ui.components.DateRangePickerDialog
 import com.moviles.jobmatch.ui.components.PaymentCard
 import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.components.formatColones
-import com.moviles.jobmatch.ui.components.formatPaymentMethod
 import com.moviles.jobmatch.ui.theme.DarkBlue
-import com.moviles.jobmatch.ui.utils.formatApplicationDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,7 +145,7 @@ fun PaymentHistoryScreen(
     }
 
     if (showDateFilter) {
-        DateFilterDialog(
+        DateRangePickerDialog(
             initialStart = state.startDate,
             initialEnd = state.endDate,
             onApply = { start, end ->
@@ -251,53 +249,6 @@ private fun FilterRow(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateFilterDialog(
-    initialStart: String?,
-    initialEnd: String?,
-    onApply: (String?, String?) -> Unit,
-    onClear: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    var startDate by remember { mutableStateOf(initialStart ?: "") }
-    var endDate by remember { mutableStateOf(initialEnd ?: "") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Filtrar por fecha", fontWeight = FontWeight.SemiBold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                DatePickerField(
-                    label = "Desde",
-                    value = startDate,
-                    onDateSelected = { startDate = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                DatePickerField(
-                    label = "Hasta",
-                    value = endDate,
-                    onDateSelected = { endDate = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onApply(
-                    startDate.ifBlank { null },
-                    endDate.ifBlank { null }
-                )
-            }) { Text("Aplicar") }
-        },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onClear) { Text("Limpiar") }
-                TextButton(onClick = onDismiss) { Text("Cancelar") }
-            }
-        }
-    )
-}
 
 // Groups payments by date label: "HOY", "AYER", or "MES AÑO"
 private fun List<PaymentResponse>.groupByDate(): LinkedHashMap<String, List<PaymentResponse>> {
