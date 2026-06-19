@@ -14,3 +14,13 @@ data class RatingResponse(
     val comment: String?,
     val createdAt: String
 )
+
+data class ReceivedRatingResponse(
+    val idRating: Int,
+    val idContract: Int,
+    val raterName: String,
+    val jobTitle: String,
+    val stars: Int,
+    val comment: String?,
+    val createdAt: String
+)

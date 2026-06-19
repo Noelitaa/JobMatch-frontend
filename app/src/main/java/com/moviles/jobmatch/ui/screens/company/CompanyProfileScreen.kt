@@ -29,6 +29,7 @@ import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.*
 import com.moviles.jobmatch.ui.components.RatingDialog
+import com.moviles.jobmatch.ui.components.ReceivedRatingCard
 import com.moviles.jobmatch.ui.screens.profile.DeleteAccountViewModel
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import com.moviles.jobmatch.ui.utils.formatApplicationDate
@@ -333,6 +334,51 @@ fun CompanyProfileContent(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+
+        if (isOwnProfile) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SectionHeader(title = "Calificaciones recibidas")
+                Spacer(modifier = Modifier.height(8.dp))
+                when {
+                    uiState.isLoadingRatings -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = DarkBlue,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                    uiState.ratingsError != null -> {
+                        Text(
+                            text = uiState.ratingsError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    uiState.receivedRatings.isEmpty() -> {
+                        Text(
+                            text = "Aún no tienes calificaciones recibidas",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF9AA5B4)
+                        )
+                    }
+                    else -> {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            uiState.receivedRatings.forEach { rating ->
+                                ReceivedRatingCard(rating = rating)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (isOwnProfile) {
