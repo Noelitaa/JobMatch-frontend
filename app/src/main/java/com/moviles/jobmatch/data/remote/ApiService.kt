@@ -26,6 +26,8 @@ import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
 import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -123,4 +125,9 @@ interface ApiService {
         @Path("userId") userId: String,
         @Body request: DeleteUserRequest
     ): Response<Unit>
+
+    @POST("payments")
+    suspend fun createPayment(
+        @Body request: CreatePaymentRequest
+    ): Response<CreatePaymentResponse>
 }

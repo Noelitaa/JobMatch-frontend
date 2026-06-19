@@ -37,6 +37,7 @@ import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
+import com.moviles.jobmatch.ui.screens.payment.MakePaymentScreen
 import com.moviles.jobmatch.ui.screens.payment.PaymentHistoryScreen
 
 @Composable
@@ -208,6 +209,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         navController.navigate(AppDestinations.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onMakePayment = { jobId, studentId, jobTitle, contractNumber, amount ->
+                        navController.navigate(
+                            AppDestinations.makePaymentRoute(
+                                jobId, studentId, jobTitle, contractNumber, amount
+                            )
+                        )
                     }
                 )
             }
@@ -282,6 +290,32 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                             )
                         )
                     }
+                )
+            }
+
+            composable(
+                route = "${AppDestinations.MAKE_PAYMENT}/{jobId}/{studentId}/{jobTitle}/{contractNumber}/{amount}",
+                arguments = listOf(
+                    navArgument("jobId")          { type = NavType.IntType },
+                    navArgument("studentId")      { type = NavType.StringType },
+                    navArgument("jobTitle")       { type = NavType.StringType },
+                    navArgument("contractNumber") { type = NavType.StringType },
+                    navArgument("amount")         { type = NavType.FloatType }
+                )
+            ) { backStackEntry ->
+                val jobId          = backStackEntry.arguments?.getInt("jobId") ?: 0
+                val studentId      = backStackEntry.arguments?.getString("studentId").orEmpty()
+                val jobTitle       = backStackEntry.arguments?.getString("jobTitle").orEmpty()
+                val contractNumber = backStackEntry.arguments?.getString("contractNumber").orEmpty()
+                val amount         = backStackEntry.arguments?.getFloat("amount")?.toDouble() ?: 0.0
+                MakePaymentScreen(
+                    jobId          = jobId,
+                    studentId      = studentId,
+                    jobTitle       = jobTitle,
+                    contractNumber = contractNumber,
+                    amount         = amount,
+                    onBackPressed  = { navController.popBackStack() },
+                    onPaymentSuccess = { navController.popBackStack() }
                 )
             }
 

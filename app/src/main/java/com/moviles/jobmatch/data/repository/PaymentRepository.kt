@@ -1,6 +1,8 @@
 package com.moviles.jobmatch.data.repository
 
 import com.moviles.jobmatch.data.remote.ApiService
+import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
+import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
 import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import java.io.IOException
 
@@ -16,6 +18,24 @@ class PaymentRepository(private val apiService: ApiService) {
                 ApiResult.Success(response.body()!!)
             } else {
                 val message = parseErrorBody(response) ?: "Error al cargar historial (${response.code()})"
+                ApiResult.Error(message, response.code())
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("No se pudo conectar al servidor")
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error inesperado")
+        }
+    }
+
+    suspend fun createPayment(
+        request: CreatePaymentRequest
+    ): ApiResult<CreatePaymentResponse> {
+        return try {
+            val response = apiService.createPayment(request)
+            if (response.isSuccessful && response.body() != null) {
+                ApiResult.Success(response.body()!!)
+            } else {
+                val message = parseErrorBody(response) ?: "Error al procesar el pago (${response.code()})"
                 ApiResult.Error(message, response.code())
             }
         } catch (e: IOException) {
