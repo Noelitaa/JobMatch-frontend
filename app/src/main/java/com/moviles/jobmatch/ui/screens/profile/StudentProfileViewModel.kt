@@ -25,6 +25,8 @@ data class StudentProfileUiState(
     val contractDetails: Map<Int, ContractDetailResponse> = emptyMap(),
     val contractDetailErrors: Map<Int, String> = emptyMap(),
     val loadingContractIds: Set<Int> = emptySet(),
+    val acceptingContractIds: Set<Int> = emptySet(),
+    val contractAcceptErrors: Map<Int, String> = emptyMap(),
     val contractsErrorMessage: String? = null,
     val errorMessage: String? = null
 )
@@ -81,6 +83,40 @@ class StudentProfileViewModel(
                     it.copy(
                         contractDetailErrors = it.contractDetailErrors + (contractId to result.message),
                         loadingContractIds = it.loadingContractIds - contractId
+                    )
+                }
+            }
+        }
+    }
+
+    fun acceptContract(contractId: Int) {
+        if (_uiState.value.acceptingContractIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    acceptingContractIds = it.acceptingContractIds + contractId,
+                    contractAcceptErrors = it.contractAcceptErrors - contractId
+                )
+            }
+            when (val result = contractRepository.acceptContract(contractId)) {
+                is ApiResult.Success -> _uiState.update { state ->
+                    state.copy(
+                        acceptingContractIds = state.acceptingContractIds - contractId,
+                        contracts = state.contracts.map { contract ->
+                            if (contract.idContract == contractId) {
+                                contract.copy(
+                                    status = result.data.contract.status,
+                                    acceptedAt = result.data.contract.acceptedAt
+                                )
+                            } else contract
+                        },
+                        contractDetails = state.contractDetails - contractId
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        acceptingContractIds = it.acceptingContractIds - contractId,
+                        contractAcceptErrors = it.contractAcceptErrors + (contractId to result.message)
                     )
                 }
             }

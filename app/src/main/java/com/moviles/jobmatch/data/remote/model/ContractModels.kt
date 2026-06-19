@@ -31,6 +31,24 @@ data class ContractDetailResponse(
     val parsedContractData: ContractData? = null
 )
 
+data class ContractResponse(
+    val idContract: Int,
+    val idApplication: Int,
+    val idJob: Int,
+    val idStudent: String,
+    val idCompany: String,
+    val status: String,
+    val createdAt: String,
+    val updatedAt: String? = null,
+    val acceptedAt: String? = null,
+    val contractData: String? = null
+)
+
+data class ContractAcceptResponse(
+    val contract: ContractResponse,
+    val message: String
+)
+
 data class ContractData(
     val jobTitle: String? = null,
     val workType: String? = null,

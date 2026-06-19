@@ -19,6 +19,7 @@ import com.moviles.jobmatch.data.remote.model.UpdateApplicationRequest
 import com.moviles.jobmatch.data.remote.model.UpdateApplicationResponse
 import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.ContractAcceptResponse
 import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
@@ -84,6 +85,9 @@ interface ApiService {
 
     @GET("contracts/{contractId}")
     suspend fun getContractById(@Path("contractId") contractId: Int): Response<ContractDetailResponse>
+
+    @PUT("contracts/{contractId}/accept")
+    suspend fun acceptContract(@Path("contractId") contractId: Int): Response<ContractAcceptResponse>
 
     @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
     suspend fun deleteUser(
