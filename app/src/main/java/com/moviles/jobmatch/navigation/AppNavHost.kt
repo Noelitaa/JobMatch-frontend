@@ -282,7 +282,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(
-                route = "make_payment/{jobId}/{studentId}/{jobTitle}/{contractNumber}/{amount}",
+                route = "${AppDestinations.MAKE_PAYMENT}/{jobId}/{studentId}/{jobTitle}/{contractNumber}/{amount}",
                 arguments = listOf(
                     navArgument("jobId")          { type = NavType.IntType },
                     navArgument("studentId")      { type = NavType.StringType },
