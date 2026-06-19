@@ -21,6 +21,7 @@ import com.moviles.jobmatch.data.remote.model.UpdateJobRequest
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.DeleteUserRequest
+import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -86,8 +87,10 @@ interface ApiService {
     @PUT("students/{studentId}/availability")
     suspend fun updateAvailability(
         @Path("studentId") studentId: String,
-        @Body body: AvailabilityResponse
-    ): Response<AvailabilityResponse>
+        @Body body: UpdateAvailabilityRequest
+    ): Response<Unit>
+
+
     @HTTP(method = "DELETE", path = "users/{userId}", hasBody = true)
     suspend fun deleteUser(
         @Path("userId") userId: String,

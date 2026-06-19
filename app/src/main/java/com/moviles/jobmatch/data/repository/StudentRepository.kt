@@ -3,6 +3,7 @@ package com.moviles.jobmatch.data.repository
 import com.moviles.jobmatch.data.remote.ApiService
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
 import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import java.io.IOException
 
 class StudentRepository(private val apiService: ApiService) {
@@ -28,24 +29,26 @@ class StudentRepository(private val apiService: ApiService) {
     }
     suspend fun updateAvailability(
         studentId: String,
-        availability: AvailabilityResponse
-    ): ApiResult<AvailabilityResponse> {
+        request: UpdateAvailabilityRequest
+    ): ApiResult<Unit> {
         return try {
-            val response = apiService.updateAvailability(studentId, availability)
+            val response = apiService.updateAvailability(studentId, request)
             when {
-                response.isSuccessful && response.body() != null ->
-                    ApiResult.Success(response.body()!!)
+                response.isSuccessful ->
+                    ApiResult.Success(Unit)
+                response.code() == 400 ->
+                    ApiResult.Error("Invalid availability data", 400)
                 response.code() == 404 ->
-                    ApiResult.Error("Estudiante no encontrado", 404)
+                    ApiResult.Error("Student not found", 404)
                 response.code() == 401 ->
-                    ApiResult.Error("No autorizado", 401)
+                    ApiResult.Error("Unauthorized", 401)
                 else ->
-                    ApiResult.Error("Error del servidor (${response.code()})", response.code())
+                    ApiResult.Error("Server error (${response.code()})", response.code())
             }
         } catch (e: IOException) {
-            ApiResult.Error("No se pudo conectar al servidor")
+            ApiResult.Error("Could not connect to server")
         } catch (e: Exception) {
-            ApiResult.Error(e.message ?: "Error inesperado")
+            ApiResult.Error(e.message ?: "Unexpected error")
         }
     }
 }

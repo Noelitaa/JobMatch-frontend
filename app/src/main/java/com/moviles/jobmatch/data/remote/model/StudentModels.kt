@@ -15,6 +15,11 @@ data class AvailabilityResponse(
     val sunday: List<TimeSlot> = emptyList()
 )
 
+data class TimeBlockRequest(
+    val day: Int,           // 0 = Monday … 6 = Sunday
+    val startTime: String,
+    val endTime: String
+)
 data class UserProfileResponse(
     val id: String,
     val fullName: String,
@@ -26,6 +31,9 @@ data class UserProfileResponse(
     val active: Boolean
 )
 
+data class UpdateAvailabilityRequest(
+    val timeBlocks: List<TimeBlockRequest>
+)
 data class StudentProfileResponse(
     val id: String,
     val user: UserProfileResponse,
