@@ -476,39 +476,40 @@ fun StudentProfileScreen(
         )
     }
 
-if (showLogoutDialog) {
-    LogoutConfirmationDialog(
-        onConfirm = {
-            showLogoutDialog = false
-            onLogout()
-        },
-        onDismiss = {
-            showLogoutDialog = false
-        }
-    )
-}
-
-val activeRatingId = ratingContractId
-if (activeRatingId != null) {
-    LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
-        if (activeRatingId in uiState.ratingSuccessIds) {
-            ratingContractId = null
-        }
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onDismiss = {
+                showLogoutDialog = false
+            }
+        )
     }
 
-    RatingDialog(
-        title = "Calificar a la empresa",
-        description = "¿Cómo fue tu experiencia con la empresa?",
-        isLoading = activeRatingId in uiState.ratingLoadingIds,
-        errorMessage = uiState.ratingErrors[activeRatingId],
-        onConfirm = { stars, comment ->
-            viewModel.submitRating(activeRatingId, stars, comment)
-        },
-        onDismiss = {
-            ratingContractId = null
-            viewModel.clearRatingError(activeRatingId)
+    val activeRatingId = ratingContractId
+    if (activeRatingId != null) {
+        LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
+            if (activeRatingId in uiState.ratingSuccessIds) {
+                ratingContractId = null
+            }
         }
-    )
+
+        RatingDialog(
+            title = "Calificar a la empresa",
+            description = "¿Cómo fue tu experiencia con la empresa?",
+            isLoading = activeRatingId in uiState.ratingLoadingIds,
+            errorMessage = uiState.ratingErrors[activeRatingId],
+            onConfirm = { stars, comment ->
+                viewModel.submitRating(activeRatingId, stars, comment)
+            },
+            onDismiss = {
+                ratingContractId = null
+                viewModel.clearRatingError(activeRatingId)
+            }
+        )
+    }
 }
 
 @Composable
