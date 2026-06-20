@@ -1,6 +1,8 @@
 package com.moviles.jobmatch.navigation
 
 import android.net.Uri
+import com.google.gson.Gson
+import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
 
 object AppDestinations {
     const val SPLASH = "splash"
@@ -18,6 +20,13 @@ object AppDestinations {
     const val ALERTS = "alertas"
     const val PROFILE = "perfil"
     const val STUDENT_PROFILE = "student_profile"
+    const val SKILL_SELECTION = "skill_selection"
+
+    fun skillSelectionRoute(studentId: String, currentSkills: List<StudentSkillResponse>): String {
+        val skillsJson = Uri.encode(Gson().toJson(currentSkills))
+        return "$SKILL_SELECTION/${Uri.encode(studentId)}?currentSkills=$skillsJson"
+    }
+
     const val STUDENT_PUBLIC_PROFILE = "student_public_profile"
     const val APPLICATION_DETAIL = "application_detail"
 
