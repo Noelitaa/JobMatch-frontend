@@ -1,0 +1,252 @@
+package com.moviles.jobmatch.ui.screens.profile
+
+import android.content.Context
+import android.net.Uri
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.remote.model.ContractDetailResponse
+import com.moviles.jobmatch.data.remote.model.ContractListResponse
+import com.moviles.jobmatch.data.remote.model.StudentProfileResponse
+import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
+import com.moviles.jobmatch.data.remote.model.ReceivedRatingResponse
+import com.moviles.jobmatch.data.repository.ApiResult
+import com.moviles.jobmatch.data.repository.ContractRepository
+import com.moviles.jobmatch.data.repository.RatingRepository
+import com.moviles.jobmatch.data.repository.StudentRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class StudentProfileUiState(
+    val isLoading: Boolean = false,
+    val student: StudentProfileResponse? = null,
+    val contracts: List<ContractListResponse> = emptyList(),
+    val isLoadingContracts: Boolean = false,
+    val contractDetails: Map<Int, ContractDetailResponse> = emptyMap(),
+    val contractDetailErrors: Map<Int, String> = emptyMap(),
+    val loadingContractIds: Set<Int> = emptySet(),
+    val acceptingContractIds: Set<Int> = emptySet(),
+    val contractAcceptErrors: Map<Int, String> = emptyMap(),
+    val ratingLoadingIds: Set<Int> = emptySet(),
+    val ratingSuccessIds: Set<Int> = emptySet(),
+    val ratingErrors: Map<Int, String> = emptyMap(),
+    val receivedRatings: List<ReceivedRatingResponse> = emptyList(),
+    val isLoadingRatings: Boolean = false,
+    val ratingsError: String? = null,
+    val contractsErrorMessage: String? = null,
+    val errorMessage: String? = null,
+    val isUploadingAvatar: Boolean = false,
+    val avatarUploadError: String? = null,
+    val isUpdatingDescription: Boolean = false,
+    val descriptionUpdateError: String? = null,
+    val descriptionUpdateSuccess: Boolean = false
+)
+
+class StudentProfileViewModel(
+    private val studentRepository: StudentRepository,
+    private val contractRepository: ContractRepository,
+    private val ratingRepository: RatingRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(StudentProfileUiState())
+    val uiState: StateFlow<StudentProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        loadProfile()
+    }
+
+    fun refreshProfile() {
+        loadProfile()
+    }
+
+    fun loadProfile() {
+        val studentId = AuthSession.currentUser?.userId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, isLoadingContracts = true, isLoadingRatings = true, errorMessage = null) }
+
+            val profileDeferred = async { studentRepository.getStudentProfile(studentId) }
+            val contractsDeferred = async { contractRepository.getStudentContracts() }
+            val ratingsDeferred = async { ratingRepository.getMyRatings() }
+
+            when (val result = profileDeferred.await()) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(isLoading = false, student = result.data) }
+                is ApiResult.Error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+            }
+
+            when (val result = contractsDeferred.await()) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(isLoadingContracts = false, contracts = result.data) }
+                is ApiResult.Error ->
+                    _uiState.update { it.copy(isLoadingContracts = false, contractsErrorMessage = result.message) }
+            }
+
+            when (val result = ratingsDeferred.await()) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(isLoadingRatings = false, receivedRatings = result.data) }
+                is ApiResult.Error ->
+                    _uiState.update { it.copy(isLoadingRatings = false, ratingsError = result.message) }
+            }
+        }
+    }
+
+    fun loadContractDetail(contractId: Int) {
+        if (_uiState.value.contractDetails.containsKey(contractId) ||
+            _uiState.value.loadingContractIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(loadingContractIds = it.loadingContractIds + contractId) }
+            when (val result = contractRepository.getContractById(contractId)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        contractDetails = it.contractDetails + (contractId to result.data),
+                        loadingContractIds = it.loadingContractIds - contractId
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        contractDetailErrors = it.contractDetailErrors + (contractId to result.message),
+                        loadingContractIds = it.loadingContractIds - contractId
+                    )
+                }
+            }
+        }
+    }
+
+    fun uploadAvatar(userId: String, imageUri: Uri, context: Context) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingAvatar = true, avatarUploadError = null) }
+            when (val result = studentRepository.updateAvatar(userId, imageUri, context)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUploadingAvatar = false) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUploadingAvatar = false, avatarUploadError = result.message)
+                }
+            }
+        }
+    }
+
+    fun submitRating(contractId: Int, stars: Int, comment: String?) {
+        if (_uiState.value.ratingLoadingIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    ratingLoadingIds = it.ratingLoadingIds + contractId,
+                    ratingErrors = it.ratingErrors - contractId
+                )
+            }
+            val request = CreateRatingRequest(idContract = contractId, stars = stars, comment = comment)
+            when (val result = ratingRepository.submitRating(request)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        ratingLoadingIds = it.ratingLoadingIds - contractId,
+                        ratingSuccessIds = it.ratingSuccessIds + contractId
+                    )
+                }
+                is ApiResult.Error -> {
+                    if (result.statusCode == 409) {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingSuccessIds = it.ratingSuccessIds + contractId
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                ratingLoadingIds = it.ratingLoadingIds - contractId,
+                                ratingErrors = it.ratingErrors + (contractId to result.message)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateDescription(userId: String, description: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingDescription = true, descriptionUpdateError = null) }
+            when (val result = studentRepository.updateDescription(userId, description)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUpdatingDescription = false, descriptionUpdateSuccess = true) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUpdatingDescription = false, descriptionUpdateError = result.message)
+                }
+            }
+        }
+    }
+
+    fun clearAvatarError() {
+        _uiState.update { it.copy(avatarUploadError = null) }
+    }
+
+    fun clearDescriptionError() {
+        _uiState.update { it.copy(descriptionUpdateError = null) }
+    }
+
+    fun clearDescriptionSuccess() {
+        _uiState.update { it.copy(descriptionUpdateSuccess = false) }
+    }
+
+    fun clearRatingError(contractId: Int) {
+        _uiState.update { it.copy(ratingErrors = it.ratingErrors - contractId) }
+    }
+
+    fun acceptContract(contractId: Int) {
+        if (_uiState.value.acceptingContractIds.contains(contractId)) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    acceptingContractIds = it.acceptingContractIds + contractId,
+                    contractAcceptErrors = it.contractAcceptErrors - contractId
+                )
+            }
+            when (val result = contractRepository.acceptContract(contractId)) {
+                is ApiResult.Success -> _uiState.update { state ->
+                    state.copy(
+                        acceptingContractIds = state.acceptingContractIds - contractId,
+                        contracts = state.contracts.map { contract ->
+                            if (contract.idContract == contractId) {
+                                contract.copy(
+                                    status = result.data.contract.status,
+                                    acceptedAt = result.data.contract.acceptedAt
+                                )
+                            } else contract
+                        },
+                        contractDetails = state.contractDetails - contractId
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        acceptingContractIds = it.acceptingContractIds - contractId,
+                        contractAcceptErrors = it.contractAcceptErrors + (contractId to result.message)
+                    )
+                }
+            }
+        }
+    }
+}
+
+class StudentProfileViewModelFactory(
+    private val studentRepository: StudentRepository,
+    private val contractRepository: ContractRepository,
+    private val ratingRepository: RatingRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(StudentProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return StudentProfileViewModel(studentRepository, contractRepository, ratingRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+    }
+}
