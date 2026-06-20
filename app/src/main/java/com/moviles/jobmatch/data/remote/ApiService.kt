@@ -30,6 +30,7 @@ import com.moviles.jobmatch.data.remote.model.PaymentResponse
 import com.moviles.jobmatch.data.remote.model.UpdateAvailabilityRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentRequest
 import com.moviles.jobmatch.data.remote.model.CreatePaymentResponse
+import com.moviles.jobmatch.data.remote.model.RegisterFcmTokenRequest
 import com.moviles.jobmatch.data.remote.model.CreateRatingRequest
 import com.moviles.jobmatch.data.remote.model.RatingResponse
 import com.moviles.jobmatch.data.remote.model.UpdateDescriptionRequest
@@ -174,4 +175,10 @@ interface ApiService {
     suspend fun createPayment(
         @Body request: CreatePaymentRequest
     ): Response<CreatePaymentResponse>
+
+    @POST("notifications/token")
+    suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<Unit>
+
+    @DELETE("notifications/token/{token}")
+    suspend fun deleteFcmToken(@Path("token") token: String): Response<Unit>
 }
