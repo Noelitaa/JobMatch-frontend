@@ -29,11 +29,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -267,35 +264,6 @@ fun StudentProfileScreen(
                             jobCount = 0,
                             onAvatarClick = { showAvatarOptions = true },
                             isUploadingAvatar = uiState.isUploadingAvatar
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // --- Estadísticas ---
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        StatCard(
-                            icon = Icons.Default.Timer,
-                            value = "--",
-                            label = "PUNTUALIDAD",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.TrendingUp,
-                            value = "--",
-                            label = "GANANCIAS",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.EmojiEvents,
-                            value = "--",
-                            label = "INSIGNIAS",
-                            modifier = Modifier.weight(1f)
                         )
                     }
 

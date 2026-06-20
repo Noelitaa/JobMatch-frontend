@@ -65,12 +65,21 @@ class JobDetailViewModel : ViewModel() {
     }
 
     fun applyToJob(jobId: Int) {
-        if (_applyState.value is ApplyState.Loading) return
+        if (_applyState.value is ApplyState.Loading || 
+            _applyState.value is ApplyState.Success || 
+            _applyState.value is ApplyState.AlreadyApplied) return
+            
         viewModelScope.launch {
             _applyState.value = ApplyState.Loading
             when (val result = applicationRepository.applyToJob(jobId)) {
                 is ApiResult.Success -> _applyState.value = ApplyState.Success
-                is ApiResult.Error -> _applyState.value = ApplyState.Error(result.message)
+                is ApiResult.Error -> {
+                    if (result.statusCode == 409) {
+                        _applyState.value = ApplyState.AlreadyApplied
+                    } else {
+                        _applyState.value = ApplyState.Error(result.message)
+                    }
+                }
             }
         }
     }

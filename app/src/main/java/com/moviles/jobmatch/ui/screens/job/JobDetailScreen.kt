@@ -58,11 +58,14 @@ fun JobDetailScreen(
         when (val state = applyState) {
             is ApplyState.Success -> {
                 snackbarHostState.showSnackbar("Application submitted successfully!")
-                viewModel.resetApplyState()
+                // Do not reset to Idle to keep the "Postulado" state on the button
             }
             is ApplyState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetApplyState()
+            }
+            is ApplyState.AlreadyApplied -> {
+                snackbarHostState.showSnackbar("You have already applied to this job.")
             }
             else -> {}
         }
