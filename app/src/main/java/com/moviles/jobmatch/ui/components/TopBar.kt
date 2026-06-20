@@ -40,12 +40,14 @@ fun JobMatchTopBar(
             }
         },
         navigationIcon = {
-            IconButton(onClick = onBackPressed) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.Black
-                )
+            if (showBackButton) {
+                IconButton(onClick = onBackPressed) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = Color.Black
+                    )
+                }
             }
         },
         actions = {

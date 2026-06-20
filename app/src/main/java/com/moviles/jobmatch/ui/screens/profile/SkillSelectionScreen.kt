@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -29,7 +30,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -40,7 +43,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -106,6 +111,7 @@ fun SkillSelectionScreen(
         snackbarHostState = snackbarHostState,
         onBackPressed = onBackPressed,
         onToggleSkill = { viewModel.toggleSkill(it) },
+        onAddCustomSkill = { viewModel.addCustomSkill(it) },
         onSave = { viewModel.saveSkills(studentId) },
         onRetry = { viewModel.loadSkills() },
         onRemoveSkill = { skill ->
@@ -120,11 +126,14 @@ private fun SkillSelectionContent(
     snackbarHostState: SnackbarHostState,
     onBackPressed: () -> Unit,
     onToggleSkill: (String) -> Unit,
+    onAddCustomSkill: (String) -> Unit,
     onSave: () -> Unit,
     onRetry: () -> Unit,
     onRemoveSkill: (StudentSkillResponse) -> Unit
 ) {
     val expandedMap = remember { mutableStateMapOf<Char, Boolean>() }
+    var newSkillText by remember { mutableStateOf("") }
+    val customSkills = uiState.selectedSkills.filter { it !in uiState.skills }
 
     Scaffold(
         topBar = {
@@ -180,6 +189,55 @@ private fun SkillSelectionContent(
                                         onRemove = { onRemoveSkill(skill) }
                                     )
                                 }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- Agregar habilidad manual ---
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    SectionHeader(title = "Agregar habilidad nueva")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newSkillText,
+                            onValueChange = { newSkillText = it },
+                            placeholder = { Text("Ej: Adobe Illustrator") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = {
+                                onAddCustomSkill(newSkillText)
+                                newSkillText = ""
+                            },
+                            enabled = newSkillText.isNotBlank()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Agregar habilidad",
+                                tint = DarkBlue
+                            )
+                        }
+                    }
+                    if (customSkills.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            customSkills.forEach { skill ->
+                                CurrentSkillChip(
+                                    text = skill,
+                                    isRemoving = false,
+                                    onRemove = { onToggleSkill(skill) }
+                                )
                             }
                         }
                     }
@@ -426,6 +484,7 @@ private fun SkillSelectionScreenPreview() {
             snackbarHostState = snackbarHostState,
             onBackPressed = {},
             onToggleSkill = {},
+            onAddCustomSkill = {},
             onSave = {},
             onRetry = {},
             onRemoveSkill = {}
