@@ -63,10 +63,16 @@ class StudentRepository(private val apiService: ApiService) {
         return try {
             val stream = context.contentResolver.openInputStream(imageUri)
                 ?: return ApiResult.Error("No se pudo abrir la imagen")
+            val mimeType = context.contentResolver.getType(imageUri) ?: "image/jpeg"
+            val extension = when (mimeType) {
+                "image/png" -> ".png"
+                "image/webp" -> ".webp"
+                else -> ".jpg"
+            }
             val bytes = stream.readBytes()
             stream.close()
-            val requestBody = bytes.toRequestBody("image/*".toMediaTypeOrNull())
-            val part = MultipartBody.Part.createFormData("avatar", "avatar.jpg", requestBody)
+            val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData("avatar", "avatar$extension", requestBody)
             val response = apiService.updateAvatar(userId, part)
             when {
                 response.isSuccessful && response.body() != null ->
