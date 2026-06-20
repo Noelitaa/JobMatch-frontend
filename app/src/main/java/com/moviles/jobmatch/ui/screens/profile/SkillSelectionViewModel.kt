@@ -60,6 +60,15 @@ class SkillSelectionViewModel(
         }
     }
 
+    fun addCustomSkill(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        val currentNames = _uiState.value.currentSkills.map { it.skillName.lowercase() }
+        val alreadySelected = _uiState.value.selectedSkills.map { it.lowercase() }
+        if (trimmed.lowercase() in currentNames || trimmed.lowercase() in alreadySelected) return
+        _uiState.update { it.copy(selectedSkills = it.selectedSkills + trimmed, errorMessage = null) }
+    }
+
     fun saveSkills(studentId: String) {
         val toSave = _uiState.value.selectedSkills.toList()
         if (toSave.isEmpty()) return
