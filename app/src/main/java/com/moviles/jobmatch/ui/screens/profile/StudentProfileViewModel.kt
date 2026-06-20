@@ -1,5 +1,7 @@
 package com.moviles.jobmatch.ui.screens.profile
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -37,7 +39,12 @@ data class StudentProfileUiState(
     val isLoadingRatings: Boolean = false,
     val ratingsError: String? = null,
     val contractsErrorMessage: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isUploadingAvatar: Boolean = false,
+    val avatarUploadError: String? = null,
+    val isUpdatingDescription: Boolean = false,
+    val descriptionUpdateError: String? = null,
+    val descriptionUpdateSuccess: Boolean = false
 )
 
 class StudentProfileViewModel(
@@ -50,6 +57,10 @@ class StudentProfileViewModel(
     val uiState: StateFlow<StudentProfileUiState> = _uiState.asStateFlow()
 
     init {
+        loadProfile()
+    }
+
+    fun refreshProfile() {
         loadProfile()
     }
 
@@ -107,6 +118,21 @@ class StudentProfileViewModel(
         }
     }
 
+    fun uploadAvatar(userId: String, imageUri: Uri, context: Context) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingAvatar = true, avatarUploadError = null) }
+            when (val result = studentRepository.updateAvatar(userId, imageUri, context)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUploadingAvatar = false) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUploadingAvatar = false, avatarUploadError = result.message)
+                }
+            }
+        }
+    }
+
     fun submitRating(contractId: Int, stars: Int, comment: String?) {
         if (_uiState.value.ratingLoadingIds.contains(contractId)) return
         viewModelScope.launch {
@@ -143,6 +169,33 @@ class StudentProfileViewModel(
                 }
             }
         }
+    }
+
+    fun updateDescription(userId: String, description: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingDescription = true, descriptionUpdateError = null) }
+            when (val result = studentRepository.updateDescription(userId, description)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isUpdatingDescription = false, descriptionUpdateSuccess = true) }
+                    loadProfile()
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(isUpdatingDescription = false, descriptionUpdateError = result.message)
+                }
+            }
+        }
+    }
+
+    fun clearAvatarError() {
+        _uiState.update { it.copy(avatarUploadError = null) }
+    }
+
+    fun clearDescriptionError() {
+        _uiState.update { it.copy(descriptionUpdateError = null) }
+    }
+
+    fun clearDescriptionSuccess() {
+        _uiState.update { it.copy(descriptionUpdateSuccess = false) }
     }
 
     fun clearRatingError(contractId: Int) {

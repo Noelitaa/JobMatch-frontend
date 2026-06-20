@@ -23,6 +23,10 @@ object AppContainer {
         StudentRepository(RetrofitClient.apiService)
     }
 
+    val skillRepository: SkillRepository by lazy {
+        SkillRepositoryImpl(RetrofitClient.apiService)
+    }
+
     val userRepository: UserRepository by lazy {
         UserRepository(RetrofitClient.apiService)
     }
@@ -33,6 +37,10 @@ object AppContainer {
 
     val paymentRepository: PaymentRepository by lazy {
         PaymentRepository(RetrofitClient.apiService)
+    }
+
+    val fcmRepository: FcmRepository by lazy {
+        FcmRepository(RetrofitClient.apiService)
     }
 
     val ratingRepository: RatingRepository by lazy {

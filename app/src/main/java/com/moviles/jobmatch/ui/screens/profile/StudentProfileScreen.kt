@@ -1,5 +1,11 @@
 package com.moviles.jobmatch.ui.screens.profile
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -28,19 +34,27 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,15 +65,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.jobmatch.data.remote.model.AvailabilityResponse
+import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
 import com.moviles.jobmatch.data.remote.model.ContractListResponse
 import com.moviles.jobmatch.data.repository.AppContainer
-import com.moviles.jobmatch.navigation.AppDestinations
 import com.moviles.jobmatch.ui.components.DayAvailabilitySelector
 import com.moviles.jobmatch.ui.components.DeleteAccountDialog
 import com.moviles.jobmatch.ui.components.InfoRow
@@ -73,15 +90,21 @@ import com.moviles.jobmatch.ui.components.StatCard
 import com.moviles.jobmatch.ui.components.StudentProfileHeader
 import com.moviles.jobmatch.ui.theme.DarkBlue
 import com.moviles.jobmatch.ui.utils.formatApplicationDate
+import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentProfileScreen(
+    refreshKey: Int = 0,
+    onEditSkills: (studentId: String, currentSkills: List<StudentSkillResponse>) -> Unit = { _, _ -> },
     onSettingsClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     onEditAvailability: () -> Unit = {},
     onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     val viewModel: StudentProfileViewModel = viewModel(
         factory = StudentProfileViewModelFactory(
             AppContainer.studentRepository,
@@ -90,6 +113,49 @@ fun StudentProfileScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val student = uiState.student
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showAvatarOptions by remember { mutableStateOf(false) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showDescriptionDialog by remember { mutableStateOf(false) }
+    var descriptionDraft by remember { mutableStateOf("") }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val sid = viewModel.uiState.value.student?.id
+            if (sid != null) viewModel.uploadAvatar(sid, uri, context)
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { uri ->
+                val sid = viewModel.uiState.value.student?.id
+                if (sid != null) viewModel.uploadAvatar(sid, uri, context)
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraImageUri?.let { uri -> cameraLauncher.launch(uri) }
+        }
+    }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) viewModel.loadProfile()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshProfile()
+    }
 
     val deleteViewModel: DeleteAccountViewModel = viewModel(
         factory = DeleteAccountViewModel.Factory(AppContainer.userRepository)
@@ -108,6 +174,27 @@ fun StudentProfileScreen(
         if (deleteUiState.isDeleted) onAccountDeleted()
     }
 
+    LaunchedEffect(uiState.avatarUploadError) {
+        uiState.avatarUploadError?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearAvatarError()
+        }
+    }
+
+    LaunchedEffect(uiState.descriptionUpdateError) {
+        uiState.descriptionUpdateError?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearDescriptionError()
+        }
+    }
+
+    LaunchedEffect(uiState.descriptionUpdateSuccess) {
+        if (uiState.descriptionUpdateSuccess) {
+            showDescriptionDialog = false
+            viewModel.clearDescriptionSuccess()
+        }
+    }
+
     Scaffold(
         topBar = {
             JobMatchTopBar(
@@ -116,6 +203,7 @@ fun StudentProfileScreen(
                 onSettingsPressed = { showLogoutDialog = true }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFFF5F7FA),
         contentWindowInsets = WindowInsets(0)
     ) { paddingValues ->
@@ -148,7 +236,6 @@ fun StudentProfileScreen(
             }
 
             else -> {
-                val student = uiState.student
                 val availabilityDays = student?.availability.toSelectedDays()
                 val skills = student?.skills ?: emptyList()
                 val contracts = uiState.contracts
@@ -177,16 +264,53 @@ fun StudentProfileScreen(
                             avatarUrl = student?.user?.avatar,
                             isVerified = true,
                             rating = student?.averageRating ?: 0f,
-                            jobCount = 0
+                            jobCount = 0,
+                            onAvatarClick = { showAvatarOptions = true },
+                            isUploadingAvatar = uiState.isUploadingAvatar
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // --- Estadísticas removed as per UI requirements ---
+                    // --- Estadísticas ---
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        StatCard(
+                            icon = Icons.Default.Timer,
+                            value = "--",
+                            label = "PUNTUALIDAD",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.TrendingUp,
+                            value = "--",
+                            label = "GANANCIAS",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.EmojiEvents,
+                            value = "--",
+                            label = "INSIGNIAS",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Sobre mí ---
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        SectionHeader(title = "Sobre mí")
+                        SectionHeader(
+                            title = "Sobre mí",
+                            actionText = "Editar",
+                            onActionClick = {
+                                descriptionDraft = student?.user?.description ?: ""
+                                showDescriptionDialog = true
+                            }
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -195,7 +319,7 @@ fun StudentProfileScreen(
                             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
-                                text = student?.user?.bio ?: "Sin descripción",
+                                text = student?.user?.description ?: "Sin descripción",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF5A6A7A),
                                 modifier = Modifier.padding(12.dp)
@@ -209,8 +333,8 @@ fun StudentProfileScreen(
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SectionHeader(
                             title = "Habilidades",
-                            actionText = "Ver todas",
-                            onActionClick = {}
+                            actionText = "Editar",
+                            onActionClick = { student?.let { s -> onEditSkills(s.id, s.skills) } }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         if (skills.isNotEmpty()) {
@@ -462,6 +586,129 @@ fun StudentProfileScreen(
         }
     }
 
+    // --- Avatar options bottom sheet ---
+    if (showAvatarOptions) {
+        ModalBottomSheet(
+            onDismissRequest = { showAvatarOptions = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Cambiar foto de perfil",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                Button(
+                    onClick = {
+                        try {
+                            val dir = File(context.cacheDir, "camera").also { it.mkdirs() }
+                            val file = File.createTempFile("photo_", ".jpg", dir)
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                file
+                            )
+                            cameraImageUri = uri
+                            showAvatarOptions = false
+                            val granted = ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.CAMERA
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (granted) {
+                                cameraLauncher.launch(uri)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        } catch (e: Exception) {
+                            showAvatarOptions = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                ) {
+                    Text("Tomar foto")
+                }
+                OutlinedButton(
+                    onClick = {
+                        showAvatarOptions = false
+                        photoPickerLauncher.launch("image/*")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, DarkBlue),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue)
+                ) {
+                    Text("Elegir de galería")
+                }
+            }
+        }
+    }
+
+    // --- Description edit dialog ---
+    if (showDescriptionDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!uiState.isUpdatingDescription) showDescriptionDialog = false
+            },
+            title = { Text("Editar descripción") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = descriptionDraft,
+                        onValueChange = { descriptionDraft = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        placeholder = { Text("Escribe algo sobre ti...") },
+                        maxLines = 5,
+                        enabled = !uiState.isUpdatingDescription
+                    )
+                    if (uiState.isUpdatingDescription) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = DarkBlue,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        student?.let { s ->
+                            viewModel.updateDescription(s.id, descriptionDraft)
+                        }
+                    },
+                    enabled = !uiState.isUpdatingDescription,
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDescriptionDialog = false },
+                    enabled = !uiState.isUpdatingDescription
+                ) {
+                    Text("Cancelar", color = DarkBlue)
+                }
+            }
+        )
+    }
+
+    // --- Delete account dialog ---
     if (showDeleteDialog) {
         DeleteAccountDialog(
             isLoading = deleteUiState.isLoading,
@@ -538,7 +785,6 @@ private fun ContractCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
-            // --- Main row (always visible) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -583,7 +829,6 @@ private fun ContractCard(
                 )
             }
 
-            // --- Expandable section ---
             AnimatedVisibility(visible = expanded) {
                 Column {
                     HorizontalDivider(color = Color(0xFFF0F2F5), thickness = 1.dp)
@@ -618,7 +863,6 @@ private fun ContractCard(
 
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                // Header
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -656,7 +900,6 @@ private fun ContractCard(
                                     ContractDetailRow(label = "Aceptado", value = formatApplicationDate(it))
                                 }
 
-                                // Contract period
                                 if (parsedData?.startDate != null || parsedData?.endDate != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     val rangeText = when {
@@ -668,7 +911,6 @@ private fun ContractCard(
                                     ContractDetailRow(label = "Vigencia", value = rangeText)
                                 }
 
-                                // Compensation
                                 parsedData?.compensation?.let { comp ->
                                     Spacer(modifier = Modifier.height(4.dp))
                                     ContractDetailRow(label = "Pago", value = comp)
@@ -678,7 +920,6 @@ private fun ContractCard(
                                 HorizontalDivider(color = Color(0xFFF0F2F5))
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                // Company
                                 Text(
                                     text = "Empresa",
                                     style = MaterialTheme.typography.labelMedium,
@@ -700,7 +941,6 @@ private fun ContractCard(
                                 HorizontalDivider(color = Color(0xFFF0F2F5))
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                // Student
                                 Text(
                                     text = "Estudiante",
                                     style = MaterialTheme.typography.labelMedium,
@@ -720,7 +960,6 @@ private fun ContractCard(
                                     ContractDetailRow(label = "Carrera", value = it)
                                 }
 
-                                // Clauses
                                 val clauses = parsedData?.clauses
                                 if (!clauses.isNullOrEmpty()) {
                                     Spacer(modifier = Modifier.height(14.dp))
@@ -757,7 +996,6 @@ private fun ContractCard(
                                     }
                                 }
 
-                                // Accept contract
                                 if (contract.status.equals("pending", ignoreCase = true)) {
                                     Spacer(modifier = Modifier.height(14.dp))
                                     HorizontalDivider(color = Color(0xFFF0F2F5))
@@ -875,4 +1113,10 @@ private fun AvailabilityResponse?.toSelectedDays(): List<Boolean> {
         saturday.isNotEmpty(),
         sunday.isNotEmpty()
     )
+}
+
+@Preview(showSystemUi = true)
+@Composable
+private fun StudentProfileScreenPreview() {
+    StudentProfileScreen()
 }

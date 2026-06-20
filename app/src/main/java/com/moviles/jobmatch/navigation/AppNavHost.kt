@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +18,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.gson.Gson
 import com.moviles.jobmatch.data.AuthSession
+import com.moviles.jobmatch.data.NotificationHandler
+import com.moviles.jobmatch.data.remote.model.StudentSkillResponse
+import com.moviles.jobmatch.data.repository.JobRepository
 import com.moviles.jobmatch.data.repository.AppContainer
 import com.moviles.jobmatch.ui.components.JobMatchBottomBar
 import com.moviles.jobmatch.ui.screens.company.CompanyDashboardScreen
@@ -35,6 +40,7 @@ import com.moviles.jobmatch.ui.screens.job.StudentDashboardScreen
 import com.moviles.jobmatch.ui.screens.login.LoginScreen
 import com.moviles.jobmatch.ui.screens.register.RegisterScreen
 import com.moviles.jobmatch.ui.screens.splash.SplashScreen
+import com.moviles.jobmatch.ui.screens.profile.SkillSelectionScreen
 import com.moviles.jobmatch.ui.screens.profile.StudentProfileScreen
 import com.moviles.jobmatch.ui.screens.availability.AvailabilityScreen
 import com.moviles.jobmatch.ui.screens.payment.MakePaymentScreen
@@ -45,6 +51,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Navigate to the screen indicated by a notification tap
+    LaunchedEffect(Unit) {
+        NotificationHandler.consume()?.let { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     val bottomBarRoute = when {
         currentRoute == AppDestinations.COMPANY_DASHBOARD -> AppDestinations.SEARCH_COMPANY
@@ -58,6 +73,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             currentRoute?.startsWith(AppDestinations.JOB_DETAIL) != true &&
             currentRoute?.startsWith(AppDestinations.EDIT_JOB) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATIONS) != true &&
+            currentRoute?.startsWith(AppDestinations.SKILL_SELECTION) != true &&
             currentRoute?.startsWith(AppDestinations.STUDENT_PUBLIC_PROFILE) != true &&
             currentRoute?.startsWith(AppDestinations.APPLICATION_DETAIL) != true
 
@@ -182,6 +198,52 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             composable(route = AppDestinations.ALERTS) {
                 PlaceholderScreen("Alertas")
+            }
+
+            composable(route = AppDestinations.PROFILE) { backStackEntry ->
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("profile_refresh_key", 0)
+                    .collectAsStateWithLifecycle()
+                StudentProfileScreen(
+                    refreshKey = refreshKey,
+                    onEditSkills = { studentId, skills ->
+                        navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    },
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(route = AppDestinations.STUDENT_PROFILE) { backStackEntry ->
+                val refreshKey by backStackEntry.savedStateHandle
+                    .getStateFlow("profile_refresh_key", 0)
+                    .collectAsStateWithLifecycle()
+                StudentProfileScreen(
+                    refreshKey = refreshKey,
+                    onEditSkills = { studentId, skills ->
+                        navController.navigate(AppDestinations.skillSelectionRoute(studentId, skills))
+                    },
+                    onEditAvailability = {
+                        navController.navigate(AppDestinations.AVAILABILITY)
+                    },
+                    onPaymentHistory = {
+                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
+                    },
+                    onAccountDeleted = {
+                        navController.navigate(AppDestinations.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(
@@ -366,46 +428,27 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 )
             }
 
-            composable(route = AppDestinations.PROFILE) {
-                StudentProfileScreen(
-                    onLogout = {
-                        AuthSession.clear()
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    onEditAvailability = {
-                        navController.navigate(AppDestinations.AVAILABILITY)
-                    },
-                    onPaymentHistory = {
-                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
-                    },
-                    onAccountDeleted = {
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
+            composable(
+                route = "${AppDestinations.SKILL_SELECTION}/{studentId}?currentSkills={currentSkills}",
+                arguments = listOf(
+                    navArgument("studentId") { type = NavType.StringType },
+                    navArgument("currentSkills") { type = NavType.StringType; defaultValue = "" }
                 )
-            }
-
-            composable(route = AppDestinations.STUDENT_PROFILE) {
-                StudentProfileScreen(
-                    onLogout = {
-                        AuthSession.clear()
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    onEditAvailability = {
-                        navController.navigate(AppDestinations.AVAILABILITY)
-                    },
-                    onPaymentHistory = {
-                        navController.navigate(AppDestinations.PAYMENT_HISTORY)
-                    },
-                    onAccountDeleted = {
-                        navController.navigate(AppDestinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
+            ) { backStackEntry ->
+                val studentId = backStackEntry.arguments?.getString("studentId").orEmpty()
+                val currentSkillsJson = backStackEntry.arguments?.getString("currentSkills").orEmpty()
+                val currentSkills: List<StudentSkillResponse> = if (currentSkillsJson.isBlank()) emptyList()
+                    else try {
+                        Gson().fromJson(currentSkillsJson, Array<StudentSkillResponse>::class.java).toList()
+                    } catch (e: Exception) { emptyList() }
+                SkillSelectionScreen(
+                    studentId = studentId,
+                    currentSkills = currentSkills,
+                    onBackPressed = { navController.popBackStack() },
+                    onSaveSuccess = {
+                        val prev = navController.previousBackStackEntry?.savedStateHandle
+                        prev?.set("profile_refresh_key", (prev.get<Int>("profile_refresh_key") ?: 0) + 1)
+                        navController.popBackStack()
                     }
                 )
             }
