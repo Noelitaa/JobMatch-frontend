@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.BusinessCenter
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -72,15 +71,9 @@ fun CompanyDashboardScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Outlined.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = Color(0xFF555555)
-                        )
-                    }
+                    // Notification bell removed as per UI requirements
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color(0xFFF4F6FA)
@@ -205,20 +198,6 @@ private fun CompanyHeaderCard(companyName: String) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color(0xFF4CAF50),
-                        modifier = Modifier.size(7.dp)
-                    ) {}
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        "PYME Verificada • San José",
-                        fontSize = 12.sp,
-                        color = Color(0xFF5A6A7A)
-                    )
-                }
             }
         }
     }

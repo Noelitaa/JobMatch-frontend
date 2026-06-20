@@ -99,10 +99,8 @@ fun ApplicationDetailScreen(
                         fontSize = 13.sp,
                         color = Color(0xFF8A9BB0)
                     )
-                    DetailRow(icon = Icons.Outlined.Tag, label = "ID Postulación", value = "#$applicationId")
-                    DetailRow(icon = Icons.Outlined.Work, label = "ID Trabajo", value = "#$jobId")
+                    // Application and Job IDs removed as per UI requirements
                     DetailRow(icon = Icons.Outlined.WorkOutline, label = "Puesto", value = jobTitle)
-                    DetailRow(icon = Icons.Outlined.Badge, label = "ID Estudiante", value = studentId)
                     DetailRow(
                         icon = Icons.Outlined.CalendarToday,
                         label = "Fecha de postulación",

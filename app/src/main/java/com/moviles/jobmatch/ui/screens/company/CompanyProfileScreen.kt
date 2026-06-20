@@ -40,6 +40,7 @@ fun CompanyProfileScreen(
     companyId: String,
     onBackPressed: () -> Unit = {},
     onSettingsPressed: () -> Unit = {},
+    onLogout: () -> Unit = {},
     onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {},
     onMakePayment: (Int, String, String, String, Double) -> Unit = { _, _, _, _, _ -> },
@@ -54,6 +55,7 @@ fun CompanyProfileScreen(
 
     val isOwnProfile = companyId == AuthSession.currentUser?.userId
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var ratingContractId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(companyId) {
@@ -69,7 +71,7 @@ fun CompanyProfileScreen(
             JobMatchTopBar(
                 title = "Perfil de Empresa",
                 onBackPressed = onBackPressed,
-                onSettingsPressed = onSettingsPressed
+                onSettingsPressed = { if (isOwnProfile) showLogoutDialog = true }
             )
         }
     ) { paddingValues ->
@@ -131,6 +133,18 @@ fun CompanyProfileScreen(
         )
     }
 
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onDismiss = {
+                showLogoutDialog = false
+            }
+        )
+    }
+
     val activeRatingId = ratingContractId
     if (activeRatingId != null) {
         LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
@@ -138,6 +152,7 @@ fun CompanyProfileScreen(
                 ratingContractId = null
             }
         }
+
         RatingDialog(
             title = "Calificar al estudiante",
             description = "¿Cómo fue la participación del estudiante?",

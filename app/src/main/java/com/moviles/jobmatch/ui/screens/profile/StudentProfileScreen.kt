@@ -29,11 +29,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -83,6 +80,7 @@ import com.moviles.jobmatch.ui.components.InfoRow
 import com.moviles.jobmatch.ui.components.RatingDialog
 import com.moviles.jobmatch.ui.components.ReceivedRatingsSection
 import com.moviles.jobmatch.ui.components.JobMatchTopBar
+import com.moviles.jobmatch.ui.components.LogoutConfirmationDialog
 import com.moviles.jobmatch.ui.components.SectionHeader
 import com.moviles.jobmatch.ui.components.SkillChip
 import com.moviles.jobmatch.ui.components.StatCard
@@ -97,6 +95,7 @@ fun StudentProfileScreen(
     refreshKey: Int = 0,
     onEditSkills: (studentId: String, currentSkills: List<StudentSkillResponse>) -> Unit = { _, _ -> },
     onSettingsClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
     onEditAvailability: () -> Unit = {},
     onPaymentHistory: () -> Unit = {},
     onAccountDeleted: () -> Unit = {}
@@ -161,7 +160,12 @@ fun StudentProfileScreen(
     val deleteUiState by deleteViewModel.uiState.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var ratingContractId by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile()
+    }
 
     LaunchedEffect(deleteUiState.isDeleted) {
         if (deleteUiState.isDeleted) onAccountDeleted()
@@ -193,7 +197,7 @@ fun StudentProfileScreen(
             JobMatchTopBar(
                 title = "Mi Perfil",
                 showBackButton = false,
-                onSettingsPressed = onSettingsClick
+                onSettingsPressed = { showLogoutDialog = true }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -260,35 +264,6 @@ fun StudentProfileScreen(
                             jobCount = 0,
                             onAvatarClick = { showAvatarOptions = true },
                             isUploadingAvatar = uiState.isUploadingAvatar
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // --- Estadísticas ---
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        StatCard(
-                            icon = Icons.Default.Timer,
-                            value = "--",
-                            label = "PUNTUALIDAD",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.TrendingUp,
-                            value = "--",
-                            label = "GANANCIAS",
-                            modifier = Modifier.weight(1f)
-                        )
-                        StatCard(
-                            icon = Icons.Default.EmojiEvents,
-                            value = "--",
-                            label = "INSIGNIAS",
-                            modifier = Modifier.weight(1f)
                         )
                     }
 
@@ -716,6 +691,18 @@ fun StudentProfileScreen(
         )
     }
 
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onDismiss = {
+                showLogoutDialog = false
+            }
+        )
+    }
+
     val activeRatingId = ratingContractId
     if (activeRatingId != null) {
         LaunchedEffect(activeRatingId in uiState.ratingSuccessIds) {
@@ -723,6 +710,7 @@ fun StudentProfileScreen(
                 ratingContractId = null
             }
         }
+
         RatingDialog(
             title = "Calificar a la empresa",
             description = "¿Cómo fue tu experiencia con la empresa?",
