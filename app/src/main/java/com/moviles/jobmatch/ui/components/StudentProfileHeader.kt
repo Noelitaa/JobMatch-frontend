@@ -1,10 +1,13 @@
 package com.moviles.jobmatch.ui.components
 
+import com.moviles.jobmatch.core.AppConstants
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,9 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,7 +45,9 @@ fun StudentProfileHeader(
     avatarUrl: String? = null,
     isVerified: Boolean = true,
     rating: Float = 0f,
-    jobCount: Int = 0
+    jobCount: Int = 0,
+    onAvatarClick: () -> Unit = {},
+    isUploadingAvatar: Boolean = false
 ) {
     Column(
         modifier = Modifier
@@ -48,36 +55,80 @@ fun StudentProfileHeader(
             .padding(vertical = 20.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.size(88.dp)) {
-            if (avatarUrl != null) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .align(Alignment.Center)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(LightBlue)
-                        .align(Alignment.Center),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = name.take(2).uppercase(),
-                        color = DarkBlue,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clickable { onAvatarClick() }
+        ) {
+            // Avatar circle with camera/loading overlay
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .align(Alignment.Center)
+            ) {
+                if (avatarUrl != null) {
+                    AsyncImage(
+                        model = if (avatarUrl != null && avatarUrl.startsWith("/")) {
+                            "${AppConstants.BASE_URL.trimEnd('/')}$avatarUrl"
+                        } else {
+                            avatarUrl
+                        },
+                        contentDescription = name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(LightBlue),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = name.take(2).uppercase(),
+                            color = DarkBlue,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                if (isUploadingAvatar) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(28.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else {
+                    // Camera icon strip at bottom of avatar
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(26.dp)
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .align(Alignment.BottomCenter),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
             }
 
-            if (isVerified) {
+            // Verified badge
+            if (isVerified && !isUploadingAvatar) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)

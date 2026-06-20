@@ -20,6 +20,7 @@ data class TimeBlockRequest(
     val startTime: String,
     val endTime: String
 )
+
 data class UserProfileResponse(
     val id: String,
     val fullName: String,
@@ -27,25 +28,26 @@ data class UserProfileResponse(
     val role: String,
     val avatar: String?,
     val phone: String?,
-    val bio: String?,
+    val description: String?,
     val active: Boolean
+)
+
+data class StudentSkillResponse(
+    val skillId: String,
+    val skillName: String
 )
 
 data class UpdateAvailabilityRequest(
     val timeBlocks: List<TimeBlockRequest>
 )
 
-data class SkillResponse(
-    val skillId: String,
-    val skillName: String
-)
 data class StudentProfileResponse(
     val id: String,
     val user: UserProfileResponse,
     val university: String,
     val career: String,
     val studentId: String,
-    val skills: List<SkillResponse>,
+    val skills: List<StudentSkillResponse>,
     val availability: AvailabilityResponse?,
     val averageRating: Float
 )
